@@ -4,7 +4,7 @@
 
 ## How to get access to FABRIC?
 
-## Starting an slice on FABRIC (basic)
+## Starting a slice on FABRIC (basic)
 
 Please follow the codes provided in [this](https://github.com/MU-Data-Science/GAF/blob/main/Getting_started/first_step.ipynb) notebook to create a slice and run a simple experiment on it.
 
