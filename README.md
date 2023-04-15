@@ -19,6 +19,8 @@ Other Faculty: Drs. Eduardo J. Simoes and Deepthi Rao
 
 Postdoctoral Fellows: Dr. Manas J. Das
 
+Ph.D. Students: Khawar Shehzad
+
 # Acknowledgments
 
 This work is supported by the National Science Foundation under Grant No. [2201583](https://www.nsf.gov/awardsearch/showAward?AWD_ID=2201583&HistoricalAwards=false).
