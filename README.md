@@ -1,25 +1,33 @@
 # Harnessing FABRIC for Scalable Human Genome Sequence Analysis
 
-# Getting Started with [FABRIC](https://fabric-testbed.net/)
 
-## How to get access to FABRIC?
+# AVAH*
 
-## Starting a slice on FABRIC (basic)
+Software is available on [GitHub](https://github.com/MU-Data-Science/GAF).
 
-Please follow the codes provided in [this](https://github.com/MU-Data-Science/GAF/blob/main/Getting_started/first_step.ipynb) notebook to create a slice and run a simple experiment on it.
 
-## Creating a cluster with two nodes on FABRIC (advanced)
+# Publications
+1. Manas Das, Khawar Shehzad, Praveen Rao - **Efficient Variant Calling on Human Genome Sequences Using a GPU-Enabled Commodity Cluster.** In 32nd ACM International Conference on Information and Knowledge Management (CIKM 2023), 6 pages, Birmingham, UK, 2023. [PDF](https://drive.google.com/file/d/1N2qXUoX1L9zkZXg_ET1VGLfezXmgSsR9/view)
 
-Please follow the codes provided in [this](https://github.com/MU-Data-Science/GAF/blob/main/Getting_started/connecting_two_nodes.ipynb) notebook to create a homogeneous(same compute site) cluster of two nodes and initiate a communication between the nodes. 
+# Datasets Released
+1. Manas Das, Khawar Shehzad, Praveen Rao, May 28, 2023, “A Dataset of Network Traffic Collected Dur- ing Large-Scale Human Genome Sequence Analysis”, IEEE DataPort, [DOI](https://dx.doi.org/10.21227/y0t5-1w13).
+
+
+## Getting Started with [FABRIC](https://fabric-testbed.net/)
+More details will be available soon.
 
 # Team
 Principal Investigator: Dr. Praveen Rao
 
 Other Faculty: Drs. Eduardo J. Simoes and Deepthi Rao
 
-Postdoctoral Fellows: Dr. Manas J. Das
+Ph.D. Students: Khawar Shehzad, Polycarp Nalela
 
-Ph.D. Students: Khawar Shehzad
+B.S. Students: Matt Schutz, Chase Webb
+
+# Project Alumni
+
+Dr. Manas Das (Postdoctoral Fellow, July 2022 - August 2023)
 
 # Acknowledgments
 
