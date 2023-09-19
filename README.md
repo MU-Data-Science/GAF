@@ -3,7 +3,7 @@
 
 # AVAH*
 
-Software is available on [GitHub](https://github.com/MU-Data-Science/GAF).
+Software is available on [GitHub](https://github.com/MU-Data-Science/AVAH-STAR).
 
 
 # Publications
