@@ -10,7 +10,7 @@ Software is available on [GitHub](https://github.com/MU-Data-Science/AVAH-STAR).
 1. Manas Das, Khawar Shehzad, Praveen Rao - **Efficient Variant Calling on Human Genome Sequences Using a GPU-Enabled Commodity Cluster.** In 32nd ACM International Conference on Information and Knowledge Management (CIKM 2023), 6 pages, Birmingham, UK, 2023. [PDF](https://drive.google.com/file/d/1N2qXUoX1L9zkZXg_ET1VGLfezXmgSsR9/view)
 
 # Datasets Released
-1. Manas Das, Khawar Shehzad, Praveen Rao, May 28, 2023, “A Dataset of Network Traffic Collected Dur- ing Large-Scale Human Genome Sequence Analysis”, IEEE DataPort, [DOI](https://dx.doi.org/10.21227/y0t5-1w13).
+1. Manas Das, Khawar Shehzad, Praveen Rao - **A Dataset of Network Traffic Collected Dur- ing Large-Scale Human Genome Sequence Analysis.** IEEE DataPort, May 2023. [DOI](https://dx.doi.org/10.21227/y0t5-1w13)
 
 
 ## Getting Started with [FABRIC](https://fabric-testbed.net/)
