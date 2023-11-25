@@ -1,0 +1,164 @@
+# Running AVAH on Fabric
+
+## Setting up Fabric Cluster
+
+Steps given below assume you have access to FABRIC, are a part of GAF project and have your SSH keys setup
+
+1. On Jupyter Hub clone `https://github.com/raopr/NSF-CC-GAF.git`
+2. To create a 8 or 16 node cluster on Fabric, go to `Jupyter Hub` on FABRIC portal. From the direcotry structure pane on the left, navigate to `NSF-CC-GAF` > `public_records`  and open `create_cluster.ipynb`
+
+<img width="575" alt="Screenshot 2023-11-17 at 4 38 09 PM" src="https://github.com/MU-Data-Science/GAF/assets/22073166/111f4d15-99b6-4155-a74e-a3c02f1a2206">
+
+3. Follow the steps 1 till 3 in the notebook. It is recommended to use step 2(b) over 2(a) to create the instance and submit the slice creation request, However you can use 2(a) as well. </br> 
+Step one loades the Fablib library and list sites and their availability of GPUs, NICs and available CPU cores.  
+  - Modify the instance worker configuration as needed e.g., `fabric.c24.m128.d500` will instantiate 24 core processor, 128GB ram and 500 gb storage. 
+  - Choose a site location with GPUs one less than the combined total of RTX and T4 GPUs, matching the number of nodes. For instance, in an 8-node cluster, allocate 7 GPUs, with the master node wihtout a GPU.
+  - Wait for the slice submit to finish successfully
+  - Run Step 3 block to setup ssh, worker ips 
+  - Extend the slice from `Step 4` or navigate to `Fabric Portal` > `Experiments` > `My Slices` > `your experiment` and you should be able to see `Lease End at` option to extend the lease. 
+
+4. Clone `git clone https://github.com/MU-Data-Science/EVA.git`
+5. To setup Hadoop, Spark, and other tools, execute the following in the shell/terminal. Suppose your cluster has 16 nodes on vm0.
+  ```
+      screen -S setup
+      cd ${HOME}/NSF_CC_GAF/GAF/
+      ./cluster-configure.sh -G
+  ```
+6. After the installation is complete run `source ~/.bashrc` of logout and login again.
+7. cd `~/NSF-CC-GAF/GAF` and run `./start_spark_hadoop_cluster.sh` to start spark and haddop cluster
+8. Do `cd ~` and clone `git clone https://github.com/raopr/AVAH-FABRIC` 
+9. To run GATK we need to modify few files. On the master node open `/mydata/hadoop/etc/hadoop/yarn-site.xml` and add following properties:
+ ```
+ <property>
+             <name>yarn.nodemanager.vmem-check-enabled</name>
+             <value>false</value>
+</property>
+<property>
+             <name>yarn.nodemanager.pmem-check-enabled</name>
+             <value>false</value>
+</property>
+
+```
+In the same file change <values> for following properties. 
+ 
+ `yarn.scheduler.maximum-allocation-vcores` to `40` <br>
+ `yarn.scheduler.minimum-allocation-vcore` to `1` <br>
+ `yarn.nodemanager.resource.cpu-vcores` to `20` <br>
+ `yarn.nodemanager.maximum-allocation-mb` to `91440` <br>
+ `yarn.nodemanager.resource.memory-mb` to `102000` <br> 
+ 
+ Copy the updated `yarn-site.xml` file to all the nodes and upadte the settings. Assuming we have 8 nodes:
+ 
+ ```
+ $ python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py copy 8 /mydata/hadoop/etc/hadoop/yarn-site.xml /mydata/hadoop/etc/hadoop/
+ $ /mydata/hadoop/sbin/stop-yarn.sh
+ $ /mydata/hadoop/sbin/start-yarn.sh
+ ```
+
+ Also edit `/mydata/spark/conf/spark-defaults.conf` on master node to have the following properties:
+ 
+ ```
+ spark.executor.memory        12g
+ spark.executor.memoryOverhead 5g
+ ```
+
+ Similarly copy the `spark-defaults.conf` on all the nodes and update settings:
+ 
+ ``` 
+ $ python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py copy 8 /mydata/spark/conf/spark-defaults.conf /mydata/spark/conf/
+ $ /mydata/spark/sbin/stop-all.sh
+ $ /mydata/spark/sbin/start-all.sh
+ ```
+
+10. Copy reference Genome files, genome ID file, other necessary files and fastq files </br>
+  - Nine reference files are needed to run the GATK pipeline. To copy these files from the master (vm0) to the worker nodes it is assumed that the files are already in the mydata folder of the master. To copy the files to the workers run the following script inside of the GAF folder:  
+  - Ensure following files are present in `/mydata` before running the command below:
+ 
+ ```
+ hs38.dict
+ hs38.fa.amb
+ hs38.fa.bwt
+ hs38.fa.img
+ hs38.fa.sa
+ hs38.fa
+ hs38.fa.ann
+ hs38.fa.fai
+ hs38.fa.pac
+ ```
+
+11. We also need some extra files to be copied soo run the following piece of code 
+ 
+ ```
+ $ python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py copy 8 ${HOME}/AVAH-FABRIC/scripts/run_parabricks.sh /mydata/
+ $ python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py copy 8 ${HOME}/AVAH-FABRIC/scripts/check_gpu_usage.sh /mydata/
+ ```
+
+:exclamation: Follwoing method assumes you have atleast 8 node cluster to utilise goole drive api for fastq files download <br> <br>
+12. Now we need to download FASTQ files using google drive api. We will be needing Google OAuth token to download fastq files. 
+  - In a borwser window, Go to OAuth 2.0 Playground  `developers.google.com/oauthplayground/`
+  - In the "Select the Scope" box, paste  `https://www.googleapis.com/auth/drive.readonly` and press enter 
+  - Click Authorize APIs and then Exchange authorization code for tokens and copy your token
+  - On FABRIC vm0 (master node) `cd ${HOME}/NSF_CC_GAF/Google Drive Experimental Codes/`
+  - run `fastqDownloads.py` to start downloading fastq files on 8 nodes. `python3 ./fastqDownloads.py` 
+  - Running this script will ask to input the auth token. Paste the token copied in previous step and hit enter
+  - Script should start downloading fastqFiles on 8 nodes in screen sessions. Downloaded fastq files will be placed under `/mydata/fastqFiles` on vm0 till vm7. 
+  - Once all downloads are complete, on each node run `hdfs dfs -put /mydata/fastqFiles/*fastq.gz /`
+
+ :exclamation: copying might throw following error `Name node is in safe mode` :exclamation: <br> <br> 
+
+ Restarting dfs should resolve the error 
+ ```
+ /mydata/hadoop/sbin/stop-dfs.sh
+ /mydata/hadoop/sbin/start-dfs.sh
+ ```
+13. Run `run_dstat.py` and `run_gpu_stat.py` before starting AVAH's execution.
+```
+$ python3 ${HOME}/AVAH-FABRIC/scripts/run_dstat.py 8 start
+$ python3 ${HOME}/AVAH-FABRIC/scripts/run_gpu_stat.py 8 start
+```
+
+14. Run AVAH 
+
+ ```
+ ${HOME}/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/${USER}-sampleIDs-vlarge.txt -d NONE -n 8 -b 2 -p 17 -P H -G -g
+ ```
+  - For AVAH with CPU only execution (`-G`), use `-p 7`. Otherwise, you may see `.retry` files for some sequences. 
+  - There are several ways to run AVAH. Refer to original [AVAH Repo](https://github.com/raopr/AVAH-FABRIC/edit/master/README.md) for options 
+
+15. Once the experiment completes,  stop `run_dstat.py` and `run_gpu_stat.py` 
+```
+$ python3 ${HOME}/AVAH-FABRIC/scripts/run_dstat.py 8 stop
+$ python3 ${HOME}/AVAH-FABRIC/scripts/run_gpu_stat.py 8 stop
+```
+
+16. Collect the AVAH log file from the master node, and dstat and gpu_stat files from all the worker nodes.
+```
+$ python3 ${HOME}/AVAH-FABRIC/scripts/run_dstat.py 8 collect
+$ python3 ${HOME}/AVAH-FABRIC/scripts/run_gpu_stat.py 8 collect
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
