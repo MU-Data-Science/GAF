@@ -63,7 +63,7 @@ echo " "
 for script in "${scripts[@]}"
 do
         log_file="LOG-"$script".log"
-        command='bash /home/'$USER'/NSF-CC-GAF/GAF/'$script'.sh '$scala_version' '$spark_version' '$spark_hadoop_version' '$hadoop_version' '$hadoop_sub_version' &> /home/'$USER'/NSF-CC-GAF/GAF/'$log_file''
+        command='bash /home/'$USER'/GAF/FABRIC/scripts/'$script'.sh '$scala_version' '$spark_version' '$spark_hadoop_version' '$hadoop_version' '$hadoop_sub_version' &> /home/'$USER'/GAF/FABRIC/scripts/'$log_file''
         ssh -o "StrictHostKeyChecking no" $master_ip "$command" &
         pid="$pid $!"
 
