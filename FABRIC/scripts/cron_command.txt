@@ -1,0 +1,1 @@
+@reboot /home/ubuntu/interfaces_up.sh && sudo mount /dev/mydata_vg/mydata_lv /mydata/ && source ~/.bashrc
