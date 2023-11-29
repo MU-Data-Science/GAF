@@ -97,9 +97,10 @@ In the same file change <values> for following properties.
 12. Now we need to download FASTQ files using google drive api. We will be needing Google OAuth token to download fastq files. 
   - In a borwser window, Go to OAuth 2.0 Playground  `developers.google.com/oauthplayground/`
   - In the "Select the Scope" box, paste  `https://www.googleapis.com/auth/drive.readonly` and press enter 
-  - Click Authorize APIs and then Exchange authorization code for tokens and copy your token
+  - Click Authorize APIs and then `Exchange authorization code for tokens` button and copy your token  
+    ![Screenshot 2023-11-29 at 11 26 48 AM](https://github.com/MU-Data-Science/GAF/assets/22073166/e0957486-8381-4197-ba52-42e145a51b23)
   - On FABRIC vm0 (master node) `cd ${HOME}/GAF/FABRIC/Google Drive Experimental Codes/`
-  - run `fastqDownloads.py` to start downloading fastq files on 8 nodes. `python3 ./fastqDownloads.py` 
+  - run `fastqDownloads.py` to start downloading fastq files on 8 nodes using `python3 ./fastqDownloads.py` 
   - Running this script will ask to input the auth token. Paste the token copied in previous step and hit enter
   - Script should start downloading fastqFiles on 8 nodes in screen sessions. Downloaded fastq files will be placed under `/mydata/fastqFiles` on vm0 till vm7. 
   - Once all downloads are complete, on each node run `hdfs dfs -put /mydata/fastqFiles/*fastq.gz /`
