@@ -4,8 +4,8 @@
 
 Steps given below assume you have access to FABRIC, are a part of GAF project and have your SSH keys setup
 
-1. On Jupyter Hub clone `https://github.com/raopr/NSF-CC-GAF.git`
-2. To create a 8 or 16 node cluster on Fabric, go to `Jupyter Hub` on FABRIC portal. From the direcotry structure pane on the left, navigate to `NSF-CC-GAF` > `public_records`  and open `create_cluster.ipynb`
+1. On Jupyter Hub clone `git clone https://github.com/MU-Data-Science/GAF.git`
+2. To create a 8 or 16 node cluster on Fabric, go to `Jupyter Hub` on FABRIC portal. From the direcotry structure pane on the left, navigate to `GAF` > `FABRIC` > `scripts`  and open `create_cluster.ipynb`
 
 <img width="575" alt="Screenshot 2023-11-17 at 4 38 09 PM" src="https://github.com/MU-Data-Science/GAF/assets/22073166/111f4d15-99b6-4155-a74e-a3c02f1a2206">
 
@@ -21,11 +21,11 @@ Step one loades the Fablib library and list sites and their availability of GPUs
 5. To setup Hadoop, Spark, and other tools, execute the following in the shell/terminal. Suppose your cluster has 16 nodes on vm0.
   ```
       screen -S setup
-      cd ${HOME}/NSF_CC_GAF/GAF/
+      cd ${HOME}/GAF/FABRIC/scripts
       ./cluster-configure.sh -G
   ```
 6. After the installation is complete run `source ~/.bashrc` of logout and login again.
-7. cd `~/NSF-CC-GAF/GAF` and run `./start_spark_hadoop_cluster.sh` to start spark and haddop cluster
+7. cd `~/GAF/FABRIC/scripts` and run `./start_spark_hadoop_cluster.sh` to start spark and haddop cluster
 8. Do `cd ~` and clone `git clone https://github.com/raopr/AVAH-FABRIC` 
 9. To run GATK we need to modify few files. On the master node open `/mydata/hadoop/etc/hadoop/yarn-site.xml` and add following properties:
  ```
@@ -98,7 +98,7 @@ In the same file change <values> for following properties.
   - In a borwser window, Go to OAuth 2.0 Playground  `developers.google.com/oauthplayground/`
   - In the "Select the Scope" box, paste  `https://www.googleapis.com/auth/drive.readonly` and press enter 
   - Click Authorize APIs and then Exchange authorization code for tokens and copy your token
-  - On FABRIC vm0 (master node) `cd ${HOME}/NSF_CC_GAF/Google Drive Experimental Codes/`
+  - On FABRIC vm0 (master node) `cd ${HOME}/GAF/FABRIC/Google Drive Experimental Codes/`
   - run `fastqDownloads.py` to start downloading fastq files on 8 nodes. `python3 ./fastqDownloads.py` 
   - Running this script will ask to input the auth token. Paste the token copied in previous step and hit enter
   - Script should start downloading fastqFiles on 8 nodes in screen sessions. Downloaded fastq files will be placed under `/mydata/fastqFiles` on vm0 till vm7. 
