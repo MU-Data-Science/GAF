@@ -86,14 +86,14 @@ In the same file change <values> for following properties.
  hs38.fa.pac
  ```
 
-11. We also need some extra files to be copied soo run the following piece of code 
+11. We also need some extra files to be copied soo run the following piece of code <br> <br>
  
  ```
  $ python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py copy 8 ${HOME}/AVAH-FABRIC/scripts/run_parabricks.sh /mydata/
  $ python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py copy 8 ${HOME}/AVAH-FABRIC/scripts/check_gpu_usage.sh /mydata/
  ```
 
-:exclamation: Follwoing method assumes you have atleast 8 node cluster to utilise goole drive api for fastq files download <br> <br>
+:exclamation: Follwoing method assumes you have atleast 8 node cluster to utilise goole drive api for fastq files download :exclamation: <br> <br>
 12. Now we need to download FASTQ files using google drive api. We will be needing Google OAuth token to download fastq files. 
   - In a borwser window, Go to OAuth 2.0 Playground  `developers.google.com/oauthplayground/`
   - In the "Select the Scope" box, paste  `https://www.googleapis.com/auth/drive.readonly` and press enter 
