@@ -7,7 +7,7 @@ Steps given below assume you have access to FABRIC, are a part of GAF project an
 1. On Jupyter Hub clone `git clone https://github.com/MU-Data-Science/GAF.git`
 2. To create a 8 or 16 node cluster on Fabric, go to `Jupyter Hub` on FABRIC portal. From the direcotry structure pane on the left, navigate to `GAF` > `FABRIC` > `scripts`  and open `create_cluster.ipynb`
 
-<img width="575" alt="Screenshot 2023-11-17 at 4 38 09 PM" src="https://github.com/MU-Data-Science/GAF/assets/22073166/111f4d15-99b6-4155-a74e-a3c02f1a2206">
+  ![Screenshot 2023-11-29 at 11 26 48 AM](https://github.com/MU-Data-Science/GAF/assets/22073166/e0957486-8381-4197-ba52-42e145a51b23)
 
 3. Follow the steps 1 till 3 in the notebook. It is recommended to use step 2(b) over 2(a) to create the instance and submit the slice creation request, However you can use 2(a) as well. </br> 
 Step one loades the Fablib library and list sites and their availability of GPUs, NICs and available CPU cores.  
@@ -97,8 +97,8 @@ In the same file change <values> for following properties.
 12. Now we need to download FASTQ files using google drive api. We will be needing Google OAuth token to download fastq files. 
   - In a borwser window, Go to OAuth 2.0 Playground  `developers.google.com/oauthplayground/`
   - In the "Select the Scope" box, paste  `https://www.googleapis.com/auth/drive.readonly` and press enter 
-  - Click Authorize APIs and then `Exchange authorization code for tokens` button and copy your token  
-    ![Screenshot 2023-11-29 at 11 26 48 AM](https://github.com/MU-Data-Science/GAF/assets/22073166/e0957486-8381-4197-ba52-42e145a51b23)
+  - Click Authorize APIs and then `Exchange authorization code for tokens` button and copy the `Acces token`
+    ![Screenshot 2023-11-29 at 11 22 41 AM](https://github.com/MU-Data-Science/GAF/assets/22073166/1f41c846-08f2-432b-b7cf-2c9169561f02)
   - On FABRIC vm0 (master node) `cd ${HOME}/GAF/FABRIC/Google Drive Experimental Codes/`
   - run `fastqDownloads.py` to start downloading fastq files on 8 nodes using `python3 ./fastqDownloads.py` 
   - Running this script will ask to input the auth token. Paste the token copied in previous step and hit enter
