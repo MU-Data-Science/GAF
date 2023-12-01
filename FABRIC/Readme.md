@@ -122,7 +122,7 @@ $ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 start
  ${HOME}/GAF/FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/${USER}-sampleIDs-vlarge.txt -d NONE -n 8 -b 2 -p 17 -P H -G -g
  ```
   - For AVAH with CPU only execution (`-G`), use `-p 7`. Otherwise, you may see `.retry` files for some sequences. 
-  - There are several ways to run AVAH. Refer to original [AVAH Repo](https://github.com/raopr/AVAH-FABRIC/edit/master/README.md) for options 
+  - There are several ways to run AVAH. Refer to original [AVAH-STAR Repo](https://github.com/MU-Data-Science/GAF/tree/main/AVAH-STAR) for more options 
 
 13. Once the experiment completes,  stop `run_dstat.py` and `run_gpu_stat.py` 
 ```
