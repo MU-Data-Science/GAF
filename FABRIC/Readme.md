@@ -26,7 +26,6 @@ Step one loades the Fablib library and list sites and their availability of GPUs
   ```
 6. After the installation is complete run `source ~/.bashrc` of logout and login again.
 7. cd `~/GAF/FABRIC/scripts` and run `./start_spark_hadoop_cluster.sh` to start spark and haddop cluster
-8. Do `cd ~` and clone `git clone https://github.com/raopr/AVAH-FABRIC` 
 9. To run GATK we need to modify few files. On the master node open `/mydata/hadoop/etc/hadoop/yarn-site.xml` and add following properties:
  ```
  <property>
@@ -50,7 +49,7 @@ In the same file change <values> for following properties.
  Copy the updated `yarn-site.xml` file to all the nodes and upadte the settings. Assuming we have 8 nodes:
  
  ```
- $ python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py copy 8 /mydata/hadoop/etc/hadoop/yarn-site.xml /mydata/hadoop/etc/hadoop/
+ $ python3 ${HOME}/GAF/FABRIC/scripts/run_remote_command.py copy 8 /mydata/hadoop/etc/hadoop/yarn-site.xml /mydata/hadoop/etc/hadoop/
  $ /mydata/hadoop/sbin/stop-yarn.sh
  $ /mydata/hadoop/sbin/start-yarn.sh
  ```
@@ -65,7 +64,7 @@ In the same file change <values> for following properties.
  Similarly copy the `spark-defaults.conf` on all the nodes and update settings:
  
  ``` 
- $ python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py copy 8 /mydata/spark/conf/spark-defaults.conf /mydata/spark/conf/
+ $ python3 ${HOME}/GAF/FABRIC/scripts/run_remote_command.py copy 8 /mydata/spark/conf/spark-defaults.conf /mydata/spark/conf/
  $ /mydata/spark/sbin/stop-all.sh
  $ /mydata/spark/sbin/start-all.sh
  ```
@@ -89,8 +88,8 @@ In the same file change <values> for following properties.
 11. We also need some extra files to be copied soo run the following piece of code <br> <br>
  
  ```
- $ python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py copy 8 ${HOME}/AVAH-FABRIC/scripts/run_parabricks.sh /mydata/
- $ python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py copy 8 ${HOME}/AVAH-FABRIC/scripts/check_gpu_usage.sh /mydata/
+ $ python3 ${HOME}/GAF/FABRIC/scripts/run_remote_command.py copy 8 ${HOME}/GAF/FABRIC/scripts/run_parabricks.sh /mydata/
+ $ python3 ${HOME}/GAF/FABRIC/scripts/run_remote_command.py copy 8 ${HOME}/GAF/FABRIC/scripts/check_gpu_usage.sh /mydata/
  ```
 
 :exclamation: Follwoing method assumes you have atleast 8 node cluster to utilise goole drive api for fastq files download :exclamation: <br> <br>
@@ -114,28 +113,28 @@ In the same file change <values> for following properties.
  ```
 13. Run `run_dstat.py` and `run_gpu_stat.py` before starting AVAH's execution.
 ```
-$ python3 ${HOME}/AVAH-FABRIC/scripts/run_dstat.py 8 start
-$ python3 ${HOME}/AVAH-FABRIC/scripts/run_gpu_stat.py 8 start
+$ python3 ${HOME}/GAF/FABRIC/scripts/run_dstat.py 8 start
+$ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 start
 ```
 
 14. Run AVAH 
 
  ```
- ${HOME}/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/${USER}-sampleIDs-vlarge.txt -d NONE -n 8 -b 2 -p 17 -P H -G -g
+ ${HOME}/GAF/FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/${USER}-sampleIDs-vlarge.txt -d NONE -n 8 -b 2 -p 17 -P H -G -g
  ```
   - For AVAH with CPU only execution (`-G`), use `-p 7`. Otherwise, you may see `.retry` files for some sequences. 
   - There are several ways to run AVAH. Refer to original [AVAH Repo](https://github.com/raopr/AVAH-FABRIC/edit/master/README.md) for options 
 
 15. Once the experiment completes,  stop `run_dstat.py` and `run_gpu_stat.py` 
 ```
-$ python3 ${HOME}/AVAH-FABRIC/scripts/run_dstat.py 8 stop
-$ python3 ${HOME}/AVAH-FABRIC/scripts/run_gpu_stat.py 8 stop
+$ python3 ${HOME}/GAF/FABRIC/scripts/run_dstat.py 8 stop
+$ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 stop
 ```
 
 16. Collect the AVAH log file from the master node, and dstat and gpu_stat files from all the worker nodes.
 ```
-$ python3 ${HOME}/AVAH-FABRIC/scripts/run_dstat.py 8 collect
-$ python3 ${HOME}/AVAH-FABRIC/scripts/run_gpu_stat.py 8 collect
+$ python3 ${HOME}/GAF/FABRIC/scripts/run_dstat.py 8 collect
+$ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 collect
 ```
 
 
