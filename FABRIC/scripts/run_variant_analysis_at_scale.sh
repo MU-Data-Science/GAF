@@ -10,7 +10,7 @@ LOCAL_PREFIX="file:/"
 MASTER_URL="yarn --deploy-mode client"
 DATE=$(date "+%Y-%m-%d-%s")
 LOGFILE="/mydata/${USER}-avah-${DATE}.log"
-EVA_JAR=${HOME}"/AVAH-FABRIC/lib/avah_3-0-0_2.12-0.1.jar"
+EVA_JAR=${HOME}"/GAF/FABRIC/lib/avah_3-0-0_2.12-0.1.jar"
 DEFAULT_REFERENCE="hs38"
 EVA_HOME=${HOME}"/EVA"
 BWA_HOME="/mydata/bwa"
@@ -181,7 +181,7 @@ echo ${EXTRA_ARGS}
 
 scala_version=$(spark-submit --version |& grep 'Using Scala version')
 if [[ ${scala_version} == *"Using Scala version 2.11"* ]]; then
-    EVA_JAR=${HOME}"/AVAH-FABRIC/lib/avah_2-4-7_2.11-0.1.jar"
+    EVA_JAR=${HOME}"/GAF/FABRIC/lib/avah_2-4-7_2.11-0.1.jar"
 fi
 
 echo "Using "${EVA_JAR}
