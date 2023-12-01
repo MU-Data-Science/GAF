@@ -18,8 +18,8 @@ do
         then
                 continue
         else
-                scp $HOME/NSF-CC-GAF/GAF/interfaces_up.sh $ip:$HOME/
-                scp $HOME/NSF-CC-GAF/GAF/cron_command.txt $ip:$HOME/
+                scp $HOME/GAF/FABRIC/scripts/interfaces_up.sh $ip:$HOME/
+                scp $HOME/GAF/FABRIC/scripts/cron_command.txt $ip:$HOME/
                 ssh -o "StrictHostKeyChecking no" $ip "$remote_command" > /dev/null 2>&1
         fi
 done
