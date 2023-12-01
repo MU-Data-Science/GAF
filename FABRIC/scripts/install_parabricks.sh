@@ -18,5 +18,5 @@ sudo modprobe overlay && sudo modprobe br_netfilter
 
 for ip in `cat /home/$USER/gpu_ips.txt`
 do
-        ssh -tt -o "StrictHostKeyChecking no" $ip "$remote_command" > /home/$USER/NSF-CC-GAF/GAF/LOG_parabricks_install.log 2>&1
+        ssh -tt -o "StrictHostKeyChecking no" $ip "$remote_command" > /home/$USER/GAF/LOG_parabricks_install.log 2>&1
 done
