@@ -19,7 +19,7 @@ do
         then
                 continue
         else
-                ssh -tt -o "StrictHostKeyChecking no" $ip "$remote_command" > /home/$USER/NSF-CC-GAF/GAF/LOG_gpu_driver_install.log 2>&1 &
+                ssh -tt -o "StrictHostKeyChecking no" $ip "$remote_command" > /home/$USER/GAF/LOG_gpu_driver_install.log 2>&1 &
                 pid_list="$pid_list $!"
                 echo $pid_list
                 nodes=$((nodes+1))
