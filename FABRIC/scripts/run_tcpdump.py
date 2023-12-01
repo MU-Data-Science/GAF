@@ -70,7 +70,7 @@ def main():
             run_cmd = ''' pkill mergecap; pkill tshark '''
             print(run_cmd)
             run_ret = subprocess.call(run_cmd, shell=True)
-            run_cmd = ''' scp {}/AVAH/scripts/process_network_traces.sh vm{}{}{}/ '''.format(MYHOME, i, ":", MYHOME)
+            run_cmd = ''' scp {}/GAF/FABRIC/scripts/process_network_traces.sh vm{}{}{}/ '''.format(MYHOME, i, ":", MYHOME)
             print(run_cmd)
             run_ret = subprocess.call(run_cmd, shell=True)
             run_cmd = ''' ssh vm{} {}/process_network_traces.sh vm{} '''.format(i, MYHOME, i)
