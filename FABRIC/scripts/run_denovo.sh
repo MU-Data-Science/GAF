@@ -8,7 +8,7 @@ LOCAL_PREFIX="file:/"
 MASTER_URL="yarn --deploy-mode client"
 DATE=$(date "+%Y-%m-%d-%s")
 LOGFILE="/mydata/${USER}-denovo-${DATE}.log"
-EVA_JAR=${HOME}"/AVAH/lib/avah_2.12-0.1.jar"
+EVA_JAR=${HOME}"/GAF/FABRIC/lib/avah_2.12-0.1.jar"
 DEFAULT_KMER_LEN=51
 
 if [[ $# -lt 3 ]]; then
