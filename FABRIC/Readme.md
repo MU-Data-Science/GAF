@@ -17,16 +17,15 @@ Step one loades the Fablib library and list sites and their availability of GPUs
   - Run Step 3 block to setup ssh, worker ips 
   - Extend the slice from `Step 4` or navigate to `Fabric Portal` > `Experiments` > `My Slices` > `your experiment` and you should be able to see `Lease End at` option to extend the lease. 
 
-4. Clone `git clone https://github.com/MU-Data-Science/EVA.git`
-5. To setup Hadoop, Spark, and other tools, execute the following in the shell/terminal. Suppose your cluster has 16 nodes on vm0.
+4. To setup Hadoop, Spark, and other tools, execute the following in the shell/terminal. Suppose your cluster has 16 nodes on vm0.
   ```
       screen -S setup
       cd ${HOME}/GAF/FABRIC/scripts
       ./cluster-configure.sh -G
   ```
-6. After the installation is complete run `source ~/.bashrc` of logout and login again.
-7. cd `~/GAF/FABRIC/scripts` and run `./start_spark_hadoop_cluster.sh` to start spark and haddop cluster
-9. To run GATK we need to modify few files. On the master node open `/mydata/hadoop/etc/hadoop/yarn-site.xml` and add following properties:
+5. After the installation is complete run `source ~/.bashrc` of logout and login again.
+6. cd `~/GAF/FABRIC/scripts` and run `./start_spark_hadoop_cluster.sh` to start spark and haddop cluster
+7. To run GATK we need to modify few files. On the master node open `/mydata/hadoop/etc/hadoop/yarn-site.xml` and add following properties:
  ```
  <property>
              <name>yarn.nodemanager.vmem-check-enabled</name>
@@ -69,7 +68,7 @@ In the same file change <values> for following properties.
  $ /mydata/spark/sbin/start-all.sh
  ```
 
-10. Copy reference Genome files, genome ID file, other necessary files and fastq files </br>
+8. Copy reference Genome files, genome ID file, other necessary files and fastq files </br>
   - Nine reference files are needed to run the GATK pipeline. To copy these files from the master (vm0) to the worker nodes it is assumed that the files are already in the mydata folder of the master. To copy the files to the workers run the following script inside of the GAF folder:  
   - Ensure following files are present in `/mydata` before running the command below:
  
@@ -85,7 +84,7 @@ In the same file change <values> for following properties.
  hs38.fa.pac
  ```
 
-11. We also need some extra files to be copied soo run the following piece of code <br> <br>
+9. We also need some extra files to be copied soo run the following piece of code <br> <br>
  
  ```
  $ python3 ${HOME}/GAF/FABRIC/scripts/run_remote_command.py copy 8 ${HOME}/GAF/FABRIC/scripts/run_parabricks.sh /mydata/
@@ -93,7 +92,7 @@ In the same file change <values> for following properties.
  ```
 
 :exclamation: Follwoing method assumes you have atleast 8 node cluster to utilise goole drive api for fastq files download :exclamation: <br> <br>
-12. Now we need to download FASTQ files using google drive api. We will be needing Google OAuth token to download fastq files. 
+10. Now we need to download FASTQ files using google drive api. We will be needing Google OAuth token to download fastq files. 
   - In a borwser window, Go to OAuth 2.0 Playground  `developers.google.com/oauthplayground/`
   - In the "Select the Scope" box, paste  `https://www.googleapis.com/auth/drive.readonly` and press enter 
   - Click Authorize APIs and then `Exchange authorization code for tokens` button and copy the `Acces token`
@@ -111,13 +110,13 @@ In the same file change <values> for following properties.
  /mydata/hadoop/sbin/stop-dfs.sh
  /mydata/hadoop/sbin/start-dfs.sh
  ```
-13. Run `run_dstat.py` and `run_gpu_stat.py` before starting AVAH's execution.
+11. Run `run_dstat.py` and `run_gpu_stat.py` before starting AVAH's execution.
 ```
 $ python3 ${HOME}/GAF/FABRIC/scripts/run_dstat.py 8 start
 $ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 start
 ```
 
-14. Run AVAH 
+12. Run AVAH 
 
  ```
  ${HOME}/GAF/FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/${USER}-sampleIDs-vlarge.txt -d NONE -n 8 -b 2 -p 17 -P H -G -g
@@ -125,13 +124,13 @@ $ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 start
   - For AVAH with CPU only execution (`-G`), use `-p 7`. Otherwise, you may see `.retry` files for some sequences. 
   - There are several ways to run AVAH. Refer to original [AVAH Repo](https://github.com/raopr/AVAH-FABRIC/edit/master/README.md) for options 
 
-15. Once the experiment completes,  stop `run_dstat.py` and `run_gpu_stat.py` 
+13. Once the experiment completes,  stop `run_dstat.py` and `run_gpu_stat.py` 
 ```
 $ python3 ${HOME}/GAF/FABRIC/scripts/run_dstat.py 8 stop
 $ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 stop
 ```
 
-16. Collect the AVAH log file from the master node, and dstat and gpu_stat files from all the worker nodes.
+14. Collect the AVAH log file from the master node, and dstat and gpu_stat files from all the worker nodes.
 ```
 $ python3 ${HOME}/GAF/FABRIC/scripts/run_dstat.py 8 collect
 $ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 collect
