@@ -33,7 +33,7 @@ do
                 scp /mydata/hs38.fa.ann $ip:$SHARE_DIR
                 scp /mydata/hs38.fa.fai $ip:$SHARE_DIR
                 scp /mydata/hs38.fa.pac $ip:$SHARE_DIR
-		scp /home/ubuntu/NSF-CC-GAF/GAF/sampleIDs-vlarge.txt $ip:$SHARE_DIR
+		scp /home/ubuntu/GAF/FABRIC/scripts/sampleIDs-vlarge.txt $ip:$SHARE_DIR
         fi
 
 done
