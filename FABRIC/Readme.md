@@ -21,7 +21,7 @@ Step one loades the Fablib library and list sites and their availability of GPUs
   ```
       screen -S setup
       cd ${HOME}/GAF/FABRIC/scripts
-      ./cluster-configure.sh -G
+      ./cluster_config.sh -G
   ```
 5. After the installation is complete run `source ~/.bashrc` of logout and login again.
 6. cd `~/GAF/FABRIC/scripts` and run `./start_spark_hadoop_cluster.sh` to start spark and haddop cluster
