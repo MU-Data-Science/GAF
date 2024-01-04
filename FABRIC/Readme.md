@@ -102,6 +102,8 @@ In the same file change <values> for following properties.
   - Running this script will ask to input the auth token. Paste the token copied in previous step and hit enter
   - Script should start downloading fastqFiles on 8 nodes in screen sessions. Downloaded fastq files will be placed under `/mydata/fastqFiles` on vm0 till vm7. 
   - Once all downloads are complete, on each node run `hdfs dfs -put /mydata/fastqFiles/*fastq.gz /`
+  - Or if you want to move downloaded fastq files from all the VMs to VM0, in a screen run this command `for i in {0..7}; do scp vm$i:/mydata/fastqFiles/* /mydata/genomes ;done`. It will copy the downladed fastq files from all the vms to vm0:/mydata/genomes/
+
 
  :exclamation: copying might throw following error `Name node is in safe mode` :exclamation: <br> <br> 
 
