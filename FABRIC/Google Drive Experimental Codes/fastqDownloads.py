@@ -9,6 +9,8 @@ import subprocess
 cmd = "cd /mydata"
 subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
+os.chdir("/mydata")
+
 print('Enter OAuth 2 Token:')
 token = str(input())
 print()
