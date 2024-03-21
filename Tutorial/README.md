@@ -6,5 +6,5 @@
 3. `$ git clone https://github.com/MU-Data-Science/GAF.git`
 4. For the genomics use case
    1. `$ ${HOME}/GAF/Tutorial/scripts/setup-GPUs-genomics.sh` 
-5. Pathology Use Case
-   2. `$ ${HOME}/GAF/Tutorial/scripts/setup-GPUs-WSI.sh`
+5. For the pathology use case
+   1. `$ ${HOME}/GAF/Tutorial/scripts/setup-GPUs-WSI.sh`
