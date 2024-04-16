@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>CIKM DEMO</title>
+    {% load static %}
+    <meta property="og:title" content="CIKM DEMO" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <meta property="twitter:card" content="summary_large_image" />
+
+    <style data-tag="reset-style-sheet">
+      html {  line-height: 1.15;}body {  margin: 0;}* {  box-sizing: border-box;  border-width: 0;  border-style: solid;}p,li,ul,pre,div,h1,h2,h3,h4,h5,h6,figure,blockquote,figcaption {  margin: 0;  padding: 0;}button {  background-color: transparent;}button,input,optgroup,select,textarea {  font-family: inherit;  font-size: 100%;  line-height: 1.15;  margin: 0;}button,select {  text-transform: none;}button,[type="button"],[type="reset"],[type="submit"] {  -webkit-appearance: button;}button::-moz-focus-inner,[type="button"]::-moz-focus-inner,[type="reset"]::-moz-focus-inner,[type="submit"]::-moz-focus-inner {  border-style: none;  padding: 0;}button:-moz-focus,[type="button"]:-moz-focus,[type="reset"]:-moz-focus,[type="submit"]:-moz-focus {  outline: 1px dotted ButtonText;}a {  color: inherit;  text-decoration: inherit;}input {  padding: 2px 4px;}img {  display: block;}html { scroll-behavior: smooth  }
+    </style>
+    <style data-tag="default-style-sheet">
+      html {
+        font-family: Open Sans;
+        font-size: 1rem;
+      }
+
+      body {
+        font-weight: 400;
+        font-style:normal;
+        text-decoration: none;
+        text-transform: none;
+        letter-spacing: normal;
+        line-height: 1.625;
+        color: var(--dl-color-secondary-400);
+        background-color: var(--dl-color-gray-white);
+
+      }
+
+    /* Material Design styles */
+    .material-select {
+        position: relative;
+        display: inline-block;
+        /* margin-bottom: 20px; */
+      }
+
+      .material-select select {
+        padding: 10px 5px 10px 10px; /* Adjust the padding to make space for the icon */
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 4px;
+        background-color: transparent;
+        font-family: 'Roboto', sans-serif;
+        font-size: 16px;
+        color: #333;
+        outline: none;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Add the shadow effect */
+        margin-bottom: -20px;
+      }
+
+      .home-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #3a416f;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .home-button:hover {
+      transform: scale(1.20);
+    }
+
+    .text {
+       
+        background-color: transparent;
+        font-family: 'Roboto', sans-serif;
+        font-size: 18px;
+        color: #333;
+    }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400;1,600;1,700;1,800&amp;display=swap"
+      data-tag="font"
+    />
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <style>
+      html * {
+          -webkit-font-smoothing: antialiased;
+      }
+      input::placeholder, textarea::placeholder {
+         color: #d2d6da;
+      }
+    </style>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+  </head>
+  <body>
+   
+
+
+    <div> 
+      <div class="home-container">
+        <div class="home-hero">
+          <div class="home-container01">
+            <div class="home-card">
+              <h1 class="home-text HeadingOne" style="text-align: left;">Democratizing Variant Calling on Human Genomes</h1> 
+              {% comment %} <h1 class="home-text01 HeadingOne" style="text-align: left;">Democratizing Variant Calling on Human Genomes&nbsp;</h1> {% endcomment %}
+              <span class="home-text02">
+                Users can leverage NSF-funded testbeds at no charge for medical research and education&nbsp;
+              </span> 
+              <div class="home-container02">
+              </div>
+              <div class="home-container04">
+                {% comment %} <img
+                  alt="image"
+                  src="{% static 'images/mulogo.png' %}"
+                  class="home-image"
+                /> {% endcomment %}
+                <img
+                  alt="image"
+                  src = "{% static 'images/humanDNA.png' %}"            
+                  class="home-image01"
+                />
+                <img
+                  alt="image"
+                  src="{% static 'images/cloudlab-500h.png' %}"
+                  class="home-image02"
+                />
+                <img
+                  alt="image"
+                  src="{% static 'images/fabric-600w.png' %}"
+                  class="home-image03"
+                /> 
+              </div>
+            </div>
+          </div>
+        </div>
+        <img alt="image" src="{% static 'images/bg-800h.jpg' %}" class="home-image04" />
+    </div>
+</div>
+          
+          
+          
+           <form method="post">
+           <div style="display: none;"> {% csrf_token %} </div>
+
+            <div id="mainDiv">
+
+            <div class="options" id="pipelineDiv" style="margin-left:60px">  
+                <div style="display: flex;">
+                <h2 id = "selection1">Choose Pipeline</h2>
+                <a href="#" id="infoButton"> <img alt="image" src="{% static 'images/info.png' %}" style="width: 15px; height: 15px; margin-top: 20px; margin-left: 5px"/> </a>
+                <div id="popup-window">
+                  {% comment %} <h1>Pop-up Window</h1>
+                  <p>Add text and images about the pipelines here</p> {% endcomment %}
+                  <img id="popup-image" alt="image" src="{% static 'images/pipeline.png' %}"/>
+                  <button id="close-button">X</button>
+                </div> 
+                </div>
+                <div id="selection-options1"> 
+                  {% comment %} will be poppulating via JS {% endcomment %}
+                </div>
+            </div>
+
+              <div class="options" id="genomeDiv" style="display: none" >  
+                <h2 id = "selection2">Select Genome(s)</h2>
+                <div id="selection-options2"> 
+                  {% comment %} will be poppulating via JS {% endcomment %}
+                </div>
+            </div>
+
+            <div class="options" id="clusterDiv" style="display: none" >  
+                <h2 id = "selection3">Choose Cluster</h2>
+                <div id="selection-options3"> 
+                  {% comment %} will be poppulating via JS {% endcomment %}
+                </div>
+            </div>
+          </div>
+
+          </form> 
+           
+
+
+        <footer class="footer-footer">
+          <div class="footer-container">
+             <div class="footer-container2">
+              <div class="footer-container3">
+                <span class="footer-text02 Large">Company</span>
+                <span class="footer-text03 Large">About Us</span>
+                <span class="footer-text04 Large">Careers</span>
+                <span class="footer-text05 Large">Press</span>
+                <span class="footer-text05 Large">Press</span>
+              </div>
+            <div class="footer-container1" id="img-srcs" data-genome-url="{% static 'images/animate.gif' %}" style="display:none">
+              <span class="footer-text">Scalable Data Science Lab</span>
+              <span>University of Missouri</span>
+            </div>
+              {% comment %} <div class="footer-container4">
+                <img
+                  alt="image"
+                  src="{% static 'images/fabric-600w.png' %}"
+                  class="home-image03"
+                /> 
+              </div>
+
+              <div class="footer-container4">
+                 <img
+                  alt="image"
+                  src="{% static 'images/mulogo.png' %}"
+                  class="home-image"
+                />
+              </div>
+              <div class="footer-container5">
+                 <img
+                  alt="image"
+                  src="{% static 'images/cloudlab-500h.png' %}"           
+                  class="home-image02"
+                />
+              </div>
+              <div class="footer-container5">
+                 <img
+                  alt="image"
+                  src = "{% static 'images/nsf-600w.png' %}"            
+                  class="home-image01"
+                />
+              </div>
+            </div> {% endcomment %}
+          </div>
+          <img alt="image" src="{% static 'images/waves-white.svg' %}" class="footer-image" />
+        </footer>
+      {% comment %} </div> {% endcomment %}
+    {% comment %} </div> {% endcomment %}
+    <script src="https://unpkg.com/@teleporthq/teleport-custom-scripts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/igv@2.15.5/dist/igv.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuidv4.min.js"></script>
+
+    <script src="{% static 'js/script.js' %}"></script>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Execute Command</title>
+</head>
+<body>
+    <h1>Execute Command</h1>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="command" placeholder="Enter Bash Command" required>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

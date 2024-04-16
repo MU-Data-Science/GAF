@@ -1,0 +1,4 @@
+uuid,userName,cluster,genome,BAM,BWAMarkDuplicates,SortSam,GATK_BQSR,GATK_HaplotypeCaller,vcf,link
+1923,user1,cl2,ERR016344,0,0,0,0,0,0,
+1923,user1,cl2,ERR018197,0,0,0,0,0,0,
+1923,user1,cl2,ERR018198,0,0,0,0,0,0,

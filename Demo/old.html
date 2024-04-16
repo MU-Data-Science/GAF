@@ -1,0 +1,64 @@
+<div class="home-container05">
+            <img alt="image" src="{% static 'images/cube1.svg' %}" class="home-image05" />
+            <h5 class="home-text03 HeadingThree">Choose Site</h5>
+            <div data-thq="thq-dropdown" class="home-thq-dropdown list-item">
+              <select name="site" id = "site" class="home-button button">
+                <option class="home-dropdown1 list-item" value="CloudLab">Cloud Lab</option>
+                <option class="home-dropdown1 list-item" value="Fabric">Fabric</option>
+              </select>
+            </div>
+          </div>
+          <div class="home-container06">
+            <img alt="image" src="{% static 'images/person1.svg' %}" class="home-image06" />
+            <h5 class="home-text10 HeadingThree">Select Genome</h5>
+            <div data-thq="thq-dropdown" class="home-thq-dropdown1 list-item">
+              <select name="genome" id = "genome" class="home-button button">
+                <option class="home-dropdown1 list-item" value="ERR016314">ERR016314</option>
+                <option class="home-dropdown1 list-item" value="ERR068392">ERR068392</option>
+                <option class="home-dropdown1 list-item" value="ERR062979">ERR062979</option>
+                <option class="home-dropdown1 list-item" value="Fabric">ERR062973</option>
+                <option class="home-dropdown1 list-item" value="CloudLab">ERR062967</option>
+                <option class="home-dropdown1 list-item" value="Fabric">ERR062966</option>
+                <option class="home-dropdown1 list-item" value="CloudLab">ERR062959</option>
+                <option class="home-dropdown1 list-item" value="Fabric">ERR062953</option>
+                <option class="home-dropdown1 list-item" value="CloudLab">ERR062947</option>
+              </select>
+            </div>
+          </div>
+          <div class="home-container07">
+            <img
+              alt="image"
+              src="{% static 'images/options-200h.png' %}"
+              class="home-image07"
+            />
+            <h5 class="home-text14 HeadingThree">Choose Pipeline</h5>
+            <div data-thq="thq-dropdown" class="home-thq-dropdown2 list-item">
+              <select name="command" id = "command" class="home-button button">
+                <optgroup label="Cluster"></optgroup>
+                <option value="gpuHigh">GPUs Highest Priority</option>
+                <option value="cpu">Only CPUs</option>
+                <option value="gpu">With GPUs</option>
+                <option value="gpuLow">GPUs Lowest Priority</option>
+                <optgroup label="Single Node"></optgroup>
+                <option value="xx">Example Command 1</option>
+                <option value="yy">Example Command 2</option>
+                <option value="zz">Example Command 3</option>
+              </select>
+            </div>
+          </div>
+          <div class="home-container08">
+            <img alt="image" src="{% static 'images/rocket1.svg' %}" class="home-image08" />
+            <h5 class="home-text16 HeadingThree">Submit</h5>
+            <input type="submit" value="Submit" class="home-button button text">
+            <!-- <button type="submit" class="home-button button">Submit</button> -->
+          </div>
+    
+          <div class="home-container09">
+            <img alt="image" src="{% static 'images/upload.svg' %}" class="home-image09" />
+            <h5 class="home-text17">
+              <span class="HeadingThree">Upload Genome</span>
+            </h5>
+            <button type="button" disabled="" class="home-button1 button">
+              Select Genome
+            </button>
+          </div>
