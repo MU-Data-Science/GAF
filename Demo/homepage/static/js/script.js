@@ -45,6 +45,7 @@ var genomeSizeList = [];
 var vcfTotal = 0;
 var result; 
 var clusterUsages = [];
+var accessionIDs; 
 
 const originalStyles = {
     backgroundColor: '#ffff',
@@ -245,7 +246,8 @@ function submit() {
                     fileContent,
                     email,
                     genomeSizeList,
-                    uuid
+                    uuid,
+                    accessionIDs
             }; 
             console.log("final data getting sent is ",customData);
             fetch('', {
@@ -872,12 +874,11 @@ selectionOptions1.addEventListener('click', (e) => {
                 // uploadFileBtn.id = "file";
                 var inputField = document.createElement('input');
                 inputField.type = 'text'; 
-                inputField.placeholder = 'Enter genome accession ID'; 
+                inputField.placeholder = 'ERR123..,ERR...,SRR...'; 
                 inputField.style.display = "inline-block";
                 inputField.style.border = "1px";
                 inputField.style.borderStyle = "double";
-                inputField.style.marginLeft = "5px";
-
+                inputField.style.marginLeft = "5px"; 
                 // Style the label and file input to display inline
                 //uploadFileBtn.style.display = "inline-block";
 
@@ -903,12 +904,19 @@ selectionOptions1.addEventListener('click', (e) => {
                             genomeList.push(radio.id);
                         }
                     });
+                    
+                    accessionIDs = inputField.value; 
+    
+                    console.log(" inputField val is ",accessionIDs);
 
-                    if(genomeList.length>0){
+                    if(genomeList.length>0 || accessionIDs.length > 1){
                     
                     buttonWithId.style.backgroundColor = "lightgray";
                     buttonWithId.disabled = true;
                     buttonWithId.classList.remove("hover-effect");
+
+                    inputField.disabled = true; 
+                    inputField.style.backgroundColor = "lightgray";
 
                     const buttons = document.querySelectorAll("#selection-options1 .btn")
                     buttons.forEach(function(button) {
@@ -916,7 +924,7 @@ selectionOptions1.addEventListener('click', (e) => {
                             button.disabled = true;
                           });
                     
-
+                    
                     var radioButtons = document.querySelectorAll('input[type="checkbox"]');
                     radioButtons.forEach(function (radio) {
                         radio.disabled = true;

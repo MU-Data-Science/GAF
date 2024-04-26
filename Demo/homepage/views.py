@@ -34,6 +34,21 @@ def pipelinerun():
 
 
 
+def testDown():
+
+    host = 'c220g5-111214.wisc.cloudlab.us' 
+    username = 'ks9dw'
+    cmd = ""          
+    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
+    cmd = "bash /users/ks9dw/NSF-CC-GAF/download_data/downloading_SRR_samples.sh"
+    #cmd = "cat /users/ks9dw/NSF-CC-GAF/download_data/srr_ids.txt"
+    ssh_args[-1] = cmd             
+    completed_process = subprocess.run(ssh_args,capture_output=True, text=True, check=True)
+    output = completed_process.stdout
+    oerr = completed_process.stderr
+    print(output)
+    print(oerr)
+
 def fileRenames():
     
     uuid = "Ab78c"
@@ -136,13 +151,12 @@ def getSSH(cluster):
         ssh_args = ['ssh', '-F','/Users/khawar/.ssh/fabric_ssh_config','-i','/Users/khawar/.ssh/sliver',f'{username}@{host}',cmd]
     else:
         #print(cluster+' selected') 
-        host = 'c220g2-011304.wisc.cloudlab.us'  
-        host = 'c220g5-110432.wisc.cloudlab.us'
+        host = 'c220g5-111214.wisc.cloudlab.us' 
         username = 'ks9dw'
-        #cmd = "screen -dm -S startPipelinex"          
+        cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
        
-    return 
+    return ssh_args
 
 def getCommand(commandOptions):
     if commandOptions == 'gpuHigh':
@@ -193,7 +207,7 @@ def cronFunc():
         if len(result) > 0:
         #open the csv 
             stages = ['BAM','BWAMarkDuplicates','SortSam','GATK_BQSR','GATK_HaplotypeCaller']
-            records = pd.read_csv('/Users/khawar/demoWebsiteCopy/homepage/records.csv')
+            records = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv')
             print("in new cron job")
             for res in result:
                 resSplitted = res.split('-')
@@ -225,13 +239,13 @@ def cronFunc():
                         loc = loc.index[0]
                         #print("genome present : updating stage")
                         records.loc[loc,stage] = 1
-                        records.to_csv('/Users/khawar/demoWebsiteCopy/homepage/records.csv',index = False)
+                        records.to_csv('/home/ubuntu/GAF/Demo/homepage/records.csv',index = False)
                     else:
                         #not found 
                         #print("adding genome and stage")
                         data = {'genome':genome, stage:1}  
                         records.loc[len(records)] = data 
-                        records.to_csv('/Users/khawar/demoWebsiteCopy/homepage/records.csv',index = False)
+                        records.to_csv('/home/ubuntu/GAF/Demo/homepage/records.csv',index = False)
         else:
             print("could not grep userLogs")
             print("checking vcfs")
@@ -280,11 +294,11 @@ def checkVCF():
                     ret = subprocess.run(command_string, shell=True, executable='/bin/bash', capture_output=True, text=True, check=True)
 
                     print("copying to server : ",vcf)
-                    cmd = "scp {}:/mydata/{} /Users/khawar/demoWebsiteCopy/homepage".format(username_host,vcf)
+                    cmd = "scp {}:/mydata/{} /home/ubuntu/GAF/Demo/homepage".format(username_host,vcf)
                     result = subprocess.run(cmd, capture_output=True, text=True, check=True, shell = True) 
                     
                     print("uploading  ",vcf)
-                    cmd = "python3 /Users/khawar/demoWebsiteCopy/homepage/drive_upload.py /Users/khawar/demoWebsiteCopy/homepage/{}".format(vcf)
+                    cmd = "python3 /home/ubuntu/GAF/Demo/homepage/drive_upload.py /home/ubuntu/GAF/Demo/homepage/{}".format(vcf)
                     
                     try:
                         driveLink = subprocess.run(cmd, shell = True, capture_output= True, text= True)
@@ -296,7 +310,7 @@ def checkVCF():
                             
                     
                     print("updating link : ",vcf)         
-                    records = pd.read_csv('/Users/khawar/demoWebsiteCopy/homepage/records.csv')
+                    records = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv')
                     vcfGenome = vcf.split('.')[0]
                     uuid = vcfGenome[-4:] 
                     genome = vcfGenome[:-4] 
@@ -304,7 +318,7 @@ def checkVCF():
                     
                     records.loc[loc,'link'] = driveLink
                     records.loc[loc,'vcf'] = 1
-                    records.to_csv('/Users/khawar/demoWebsiteCopy/homepage/records.csv',index = False)    
+                    records.to_csv('/home/ubuntu/GAF/Demo/homepage/records.csv',index = False)    
                     
                     
                     print("deleting from mydata ", vcf) 
@@ -314,7 +328,7 @@ def checkVCF():
                     ret = subprocess.run(command_string, shell=True, executable='/bin/bash', capture_output=True, text=True, check=True)
                     
                     print("deleting from django server ", vcf)
-                    cmd = "rm /Users/khawar/demoWebsiteCopy/homepage/{}".format(vcf)
+                    cmd = "rm /home/ubuntu/GAF/Demo/homepage/{}".format(vcf)
                     ret = subprocess.run(cmd, shell = True, capture_output= True, text= True)
                        
                        
@@ -371,17 +385,25 @@ def run_single_node():
         
                 
 def execute_command_view(request):
-    records = pd.read_csv("/Users/khawar/demoWebsiteCopy/homepage/records.csv")
+    records = pd.read_csv("/home/ubuntu/GAF/Demo/homepage/records.csv")
+    allGenomeSizes = ["1144451014","1316511682","1253702634","1712582059","2962859843","4091919508","2312019116","2441875387","1405628913","2769601391","2940489805","2834987902","1155966013","4642960047","2074564581","1802900012","2074804536","1810796785","4238943221","1889860913","4780263286","2262114215","2164110037","2239111491","2211401602","7356216287","2170573337"];
     if request.method == 'POST':
         json_data = json.loads(request.body)
         pipeline = json_data.get('pipeline')
+        accessionIDs = json_data.get('accessionIDs')
+        print("accession ids are ",accessionIDs)
         email = json_data.get('email')
         uuid = json_data.get('uuid')
         uuid = uuid[:4]
         
-        print("uuid is ",uuid)
-        print("email is ",email)
-        print("pipeline is ",pipeline)
+        cluster = json_data.get('cluster')
+        print("cluster is ",cluster)
+        
+        if cluster == "auto":
+            cluster = autoSelectCluster()
+          
+        ssh_args = getSSH(cluster)
+        print("ssh args are ",ssh_args)
         
         if pipeline == 'svc':
             downloadFileContent = json_data.get('fileContent')   
@@ -392,16 +414,35 @@ def execute_command_view(request):
             print('genome list is ',genomeList)
             print('genome sizes are ',genomeSizes)
             
-                    
-        cluster = json_data.get('cluster')
-        print("cluster is ",cluster)
-        
-        if cluster == "auto":
-            cluster = autoSelectCluster()
-        
-        print("a cluster value here in main func is ",cluster)    
-        ssh_args = getSSH(cluster)
-        
+            ## user choose accession IDs 
+            if len(genomeList)<1:
+               
+                ##create file content
+                srr_ids = "<<EOF\n"
+                for splits in accessionIDs.split(','):
+                    srr_ids+= splits.strip()+"\n"           
+                srr_ids+="EOF"
+                
+                ##empty file on cluster 
+                cmd = 'sudo bash -c "> /users/ks9dw/NSF-CC-GAF/download_data/srr_ids.txt"'
+                ssh_args[-1] = cmd
+                executeCommand(ssh_args)
+                
+                ##write to file on cluster
+                cmd = "sudo tee -a /users/ks9dw/NSF-CC-GAF/download_data/srr_ids.txt {}".format(srr_ids)
+                ssh_args[-1] = cmd 
+                out = executeCommand(ssh_args)
+                
+                ##download the accession ids
+                cmd = "bash /users/ks9dw/NSF-CC-GAF/download_data/downloading_SRR_samples.sh"
+                ssh_args[-1] = cmd 
+                
+                completed_process = subprocess.run(ssh_args,shell = True,executable='/bin/bash',capture_output=True, text=True, check=True)
+                output = completed_process.stdout
+                oerr = completed_process.stderr
+                print("output from downloading is ",output)
+                print("output err from downloading is ",oerr)
+                ##move them to /mydata/genomes/
         
         
         #preparing secondary file and poppulating records.csv
@@ -415,9 +456,9 @@ def execute_command_view(request):
             
         genomeMain+="EOF"
     
-        
+    
         ##saving records.csv
-        records.to_csv('/Users/khawar/demoWebsiteCopy/homepage/records.csv',index = False)    
+        records.to_csv('/home/ubuntu/GAF/Demo/homepage/records.csv',index = False)    
         
         
         #adding genome names and user email 
@@ -638,7 +679,7 @@ def checkFiles(request):
          
         #check the record csv and return matching rows            
         try:
-            mainRecord = pd.read_csv('/Users/khawar/demoWebsiteCopy/homepage/records.csv')
+            mainRecord = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv')
             print("all the record is ")
             print(mainRecord)
             result = mainRecord.query("uuid == '{}'".format(uuid))
@@ -660,7 +701,4 @@ def checkFiles(request):
         retRecord = result.to_json(orient='records')        
         #print("response to be sent is ",retRecord)
         return JsonResponse({'result':retRecord})
-    
-    
-
     
