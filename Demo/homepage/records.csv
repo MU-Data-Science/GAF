@@ -1,0 +1,2 @@
+uuid,userName,cluster,genome,BAM,BWAMarkDuplicates,SortSam,GATK_BQSR,GATK_HaplotypeCaller,vcf,link
+dd3b,kk,cl2,ERR016314,0,0,0,0,0,0,

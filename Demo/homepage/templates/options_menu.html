@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Execute Command</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+<br>
+    <h1>Execute Command</h1>
+    <h3>Choose site</h3>
+    <form method="post">
+        {% csrf_token %}
+        <!-- <label for="sites">Choose a Test Bed:</label> -->
+      
+        <select name="sites" id = "sites">
+          <option value="CloudLab">Cloud Lab</option>
+          <option value="Fabric">Fabric</option>
+        </select>
+    </br>
+
+    <h3>Choose Command Option</h3>
+    <!-- <label for="commands">Commands:</label>  -->
+    <select name="commands" id="commands">
+        <option value="gpuHigh">GPUs Highest Priority</option>
+        <option value="cpu">Only CPUs</option>
+        <option value="gpu">With GPUs</option>
+        <option value="gpuLow">GPUs Lowest Priority</option>
+      </select>
+      </br>
+        <input type="submit" value="Submit">
+      </form>
+      <button type="button" disabled>Upload your Genome File</button>
+</body>
+</html>
