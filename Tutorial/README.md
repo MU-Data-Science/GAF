@@ -11,3 +11,13 @@ Here are the [tutorial slides](HeDAI-2024-Praveen-Rao-tutorial.pdf) presented at
    1. `$ ${HOME}/GAF/Tutorial/scripts/setup-GPUs-genomics.sh` 
 5. For the pathology use case
    1. `$ ${HOME}/GAF/Tutorial/scripts/setup-GPUs-WSI.sh`
+
+## Additional instructions
+1. Download the reference genome files from [here](https://mailmissouri-my.sharepoint.com/:u:/g/personal/raopr_umsystem_edu/EcAAl7ea7kJGiVzbMuI5XicBOq2jEXeLN38rL8NSqii5HQ?e=8njtmq).
+2. To download a (paired-end) genome sequence using wget:
+
+   `wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR016/ERR016314/ERR016314_1.fastq.gz`
+
+   `wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/ERR016/ERR016314/ERR016314_2.fastq.gz`
+3. Parabricks command line:
+   `sudo docker run --gpus 1 --volume $(pwd):/workdir --volume $(pwd):/outputdir nvcr.io/nvidia/clara/clara-parabricks:4.2.1-1 pbrun germline --ref /workdir/hs38.fa --in-fq /workdir/ERR016314_1.fastq.gz /workdir/ERR016314_2.fastq.gz --out-bam /outputdir/ERR016314.bam --out-variants /outputdir/ERR016314.vcf --low-memory`
