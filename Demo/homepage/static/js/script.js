@@ -802,7 +802,6 @@ selectionOptions1.addEventListener('click', (e) => {
                     }
                   });  
             }
-            
             else{
                 //create list of radio buttons 
                 pipeline = e.target.value;
