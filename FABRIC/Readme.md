@@ -91,7 +91,7 @@ In the same file change <values> for following properties.
  $ python3 ${HOME}/GAF/FABRIC/scripts/run_remote_command.py copy 8 ${HOME}/GAF/FABRIC/scripts/check_gpu_usage.sh /mydata/
  ```
 
-:exclamation: Follwoing method assumes you have atleast 8 node cluster to utilise goole drive api for fastq files download :exclamation: <br> <br>
+:exclamation: Following method assumes you have atleast 8 node cluster to utilise goole drive api for fastq files download :exclamation: <br> <br>
 10. Now we need to download FASTQ files using google drive api. We will be needing Google OAuth token to download fastq files. 
   - In a borwser window, Go to OAuth 2.0 Playground  `developers.google.com/oauthplayground/`
   - In the "Select the Scope" box, paste  `https://www.googleapis.com/auth/drive.readonly` and press enter 
