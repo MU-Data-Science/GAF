@@ -17,7 +17,7 @@ We are using Google API to download fastq files from Google Drive. There are 3 d
 
 Instructions to download for each dataset are </br> 
 
-1. :exclamation: Follwoing method assumes you have atleast 8 node cluster to utilise goole drive api for fastq files download :exclamation: <br> 
+1. :exclamation: Following method assumes you have atleast 8 node cluster to utilise goole drive api for fastq files download :exclamation: <br> 
   - In a borwser window, Go to OAuth 2.0 Playground  `developers.google.com/oauthplayground/`
   - In the "Select the Scope" box, paste  `https://www.googleapis.com/auth/drive.readonly` and press enter 
   - Click Authorize APIs and then `Exchange authorization code for tokens` button and copy the `Acces token`
