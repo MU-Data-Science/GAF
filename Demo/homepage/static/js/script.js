@@ -744,18 +744,27 @@ selectionOptions1.addEventListener('click', (e) => {
                 console.log("PIPELINE IS ",pipeline);
 
                 genomeDiv.style.display = 'inline-block';
-                selectionHeading2.innerHTML ="2. Upload File";
+                selectionHeading2.innerHTML ="2. Select Genomes";
                 
-                const uploadFileBtn = document.createElement("INPUT");
-                uploadFileBtn.type = "file";
-                uploadFileBtn.id = "file";
-                uploadFileBtn.style.display = "block";
-                uploadFileBtn.style.marginLeft = "36%";
-                uploadFileBtn.style.marginTop = "25px";
-                uploadFileBtn.style.marginBottom = "25px";
-                selectionOptions2.appendChild(uploadFileBtn);
-                selectionOptions2.style.textAlign = "center";
-                selectionOptions2.style.marginTop = "10px";
+                const genomeNames = ["TCRBOA1","TCRBOA1","TCRBOA1","TCRBOA1","TCRBOA1"];
+                allGenomeSizes = ["3500000000","4500000000","4000000000","3900000000","3800000000"];
+            
+
+                for (let i =0; i<genomeNames.length; i+=1){
+                    
+                    ret = createGenomeButtons(genomeNames[i]);
+                    radioButton = ret[0];
+                    label = ret[1];
+                    label.style.marginRight = "15px";
+                    newLine = ret[2]; 
+                    
+                    selectionOptions2.style.textAlign = "center";
+                    selectionOptions2.style.marginTop = "10px";
+                    selectionOptions2.appendChild(radioButton);
+                    selectionOptions2.appendChild(label);
+                    selectionOptions2.appendChild(newLine);
+
+                }
 
                 //create next button 
                 const button = document.createElement("button");
@@ -867,10 +876,7 @@ selectionOptions1.addEventListener('click', (e) => {
                 customLabel2.style.fontWeight = 'bold'; // Custom text
                 customLabel2.style.display = "inline-block";
 
-                // Create file input element
-                // var uploadFileBtn = document.createElement('input');
-                // uploadFileBtn.type = "file";
-                // uploadFileBtn.id = "file";
+                
                 var inputField = document.createElement('input');
                 inputField.type = 'text'; 
                 inputField.placeholder = 'ERR123..,ERR...,SRR...'; 
@@ -878,11 +884,8 @@ selectionOptions1.addEventListener('click', (e) => {
                 inputField.style.border = "1px";
                 inputField.style.borderStyle = "double";
                 inputField.style.marginLeft = "5px"; 
-                // Style the label and file input to display inline
-                //uploadFileBtn.style.display = "inline-block";
-
-                // Append label and file input to container div
-                //containerDiv.appendChild(customLabel1);
+                
+             
                 containerDiv.appendChild(customLabel2);
                 containerDiv.appendChild(inputField);
                 containerDiv.style.marginTop = "50px";
