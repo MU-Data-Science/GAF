@@ -741,7 +741,7 @@ selectionOptions1.addEventListener('click', (e) => {
         // e.target.classList.remove("hover-effect");
             if(e.target.value === "svc"){
                 pipeline = e.target.value;
-                console.log("PIPELINE IS ",pipeline);
+                console.log("PIPELINE IS ",pipeline); 
 
                 genomeDiv.style.display = 'inline-block';
                 selectionHeading2.innerHTML ="2. Select Genomes";
@@ -763,6 +763,7 @@ selectionOptions1.addEventListener('click', (e) => {
                     selectionOptions2.appendChild(radioButton);
                     selectionOptions2.appendChild(label);
                     selectionOptions2.appendChild(newLine);
+                    console.log("an edit");
 
                 }
 
