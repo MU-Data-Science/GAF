@@ -34,20 +34,44 @@ def pipelinerun():
 
 
 
-def testDown():
+def genomesAccessionDownload(accessionIDs):
 
     host = 'c220g5-111214.wisc.cloudlab.us' 
     username = 'ks9dw'
     cmd = ""          
     ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
-    cmd = "bash /users/ks9dw/NSF-CC-GAF/download_data/downloading_SRR_samples.sh"
-    #cmd = "cat /users/ks9dw/NSF-CC-GAF/download_data/srr_ids.txt"
-    ssh_args[-1] = cmd             
-    completed_process = subprocess.run(ssh_args,capture_output=True, text=True, check=True)
+    
+    ##create file content
+    srr_ids = "<<EOF\n"
+    for gn in accessionIDs:
+        srr_ids+= gn+"\n"           
+    srr_ids+="EOF"
+    
+    ##empty file on cluster 
+    cmd = 'sudo bash -c "> /mydata/NSF-CC-GAF/download_data/srr_ids.txt"'
+    ssh_args[-1] = cmd
+    executeCommand(ssh_args)
+    
+    ##write to file on cluster
+    cmd = "sudo tee -a /mydata/NSF-CC-GAF/download_data/srr_ids.txt {}".format(srr_ids)
+    ssh_args[-1] = cmd 
+    out = executeCommand(ssh_args)
+    
+    ##download the accession ids
+    cmd = "bash /mydata/NSF-CC-GAF/download_data/downloading_SRR_samples.sh"
+    ssh_args[-1] = cmd 
+    
+    completed_process = subprocess.run(ssh_args,shell = True,executable='/bin/bash',capture_output=True, text=True, check=True)
     output = completed_process.stdout
     oerr = completed_process.stderr
-    print(output)
-    print(oerr)
+    print("output from downloading is ",output)
+    print("output err from downloading is ",oerr)
+    
+    ##move them to /mydata/genomes/
+    cmd = "cp /mydata/NSF-CC-GAF/download_data/data/* /mydata/genomes"
+    ssh_args[-1] = cmd 
+    out = executeCommand(ssh_args)
+    
 
 def fileRenames():
     
@@ -72,7 +96,6 @@ def fileRenames():
         command_string = ' '.join(ssh_args)
         subprocess.run(command_string, shell=True,capture_output=True, text=True, check=True)
             
-    
     
     print("copying done")   
 
@@ -416,34 +439,13 @@ def execute_command_view(request):
             
             ## user choose accession IDs 
             if len(genomeList)<1:
-               
-                ##create file content
-                srr_ids = "<<EOF\n"
-                for splits in accessionIDs.split(','):
-                    srr_ids+= splits.strip()+"\n"           
-                srr_ids+="EOF"
-                
-                ##empty file on cluster 
-                cmd = 'sudo bash -c "> /users/ks9dw/NSF-CC-GAF/download_data/srr_ids.txt"'
-                ssh_args[-1] = cmd
-                executeCommand(ssh_args)
-                
-                ##write to file on cluster
-                cmd = "sudo tee -a /users/ks9dw/NSF-CC-GAF/download_data/srr_ids.txt {}".format(srr_ids)
-                ssh_args[-1] = cmd 
-                out = executeCommand(ssh_args)
-                
-                ##download the accession ids
-                cmd = "bash /users/ks9dw/NSF-CC-GAF/download_data/downloading_SRR_samples.sh"
-                ssh_args[-1] = cmd 
-                
-                completed_process = subprocess.run(ssh_args,shell = True,executable='/bin/bash',capture_output=True, text=True, check=True)
-                output = completed_process.stdout
-                oerr = completed_process.stderr
-                print("output from downloading is ",output)
-                print("output err from downloading is ",oerr)
-                ##move them to /mydata/genomes/
+                        
+               accessionIDs = accessionIDs.split(",") 
+               for i in range(len(accessionIDs)):
+                   accessionIDs[i] = accessionIDs[i].strip 
         
+               genomesAccessionDownload(accessionIDs,cluster)
+               genomeSizes = genomeSizes[:len(accessionIDs)]
         
         #preparing secondary file and poppulating records.csv
         genomeMain = "<<EOF\n"
