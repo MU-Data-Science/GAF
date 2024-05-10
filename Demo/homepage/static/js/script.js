@@ -38,7 +38,6 @@ var pipeline;
 var runOnce = true;
 var genomeList = [];
 var cluster; 
-var fileContent;
 var email;
 var allGenomeSizes;
 var genomeSizeList = [];
@@ -243,7 +242,6 @@ function submit() {
                     pipeline,
                     genomeList,
                     cluster,
-                    fileContent,
                     email,
                     genomeSizeList,
                     uuid,
@@ -285,7 +283,6 @@ async function showClusters(){
 
     clusterDiv.style.display = 'inline-block';
     selectionHeading3.innerHTML ="3. Choose Cluster";
-    console.log("new ");
     var i = 1 ;
     var i = 0 ;
     clusterUsages = [10,88,76]
@@ -779,39 +776,53 @@ selectionOptions1.addEventListener('click', (e) => {
                 const buttonWithId = document.querySelector('#nextBtn');
 
                 buttonWithId.addEventListener('click', function() {
-                    //event.preventDefault();
-                    const uploadFileBtn = document.getElementById("file"); // Replace with the correct ID
-                    const fileInput = uploadFileBtn.files[0];
+                
+                    var radioButtons = document.querySelectorAll('input[type="checkbox"]:checked');
 
-                    if (fileInput) {
-                        // A file has been selected
-                        console.log("File uploaded:", fileInput.name);
-                        uploadFileBtn.disabled = true;
-                        const fileReader = new FileReader();
-                        fileReader.onload = function (event) {
-                            const fileContents = event.target.result; 
-                            const lines = fileContents.split("\n");                    
-                            fileContent = lines;
-                        };
+                    radioButtons.forEach(function (radio) {
+                        if (radio.id) {
+                            genomeList.push(radio.id);
+                        }
+                    });
+                
+
+                    if(genomeList.length>0){
                     
-                        // Read the file as text
-                        fileReader.readAsText(fileInput);
-                        
-                        buttonWithId.style.backgroundColor = "lightgray";
-                        const buttons = document.querySelectorAll("#selection-options2 .btn2")
-                        buttons.forEach(function(button) {
+                    buttonWithId.style.backgroundColor = "lightgray";
+                    buttonWithId.disabled = true;
+                    buttonWithId.classList.remove("hover-effect");
+
+                    const buttons = document.querySelectorAll("#selection-options1 .btn")
+                    buttons.forEach(function(button) {
                             button.classList.remove("hover-effect");
                             button.disabled = true;
                           });
+                    
+                    var radioButtons = document.querySelectorAll('input[type="checkbox"]');
+                    radioButtons.forEach(function (radio) {
+                        radio.disabled = true;
+                    });
+                    
 
-                        showClusters();
-                     
-                    } else {
-                        event.preventDefault();
-                        alert('Upload File');
-                    }
-                  });  
-            }
+                    genomeList.forEach(function(element){
+                        index = genomeList.indexOf(element);
+                        genomeSizeList.push(allGenomeSizes[index]);
+                    })
+                    console.log("genomeList is ",genomeList);
+                    console.log("size list is ", genomeSizeList);
+                    showClusters();
+
+                }
+                else{
+                    event.preventDefault();
+                    alert('Please select atleast one genome to process'); 
+                }
+                    
+                }); //end event listner 
+            
+
+                } //if svc 
+
             else{
                 //create list of radio buttons 
                 pipeline = e.target.value;
@@ -933,16 +944,14 @@ selectionOptions1.addEventListener('click', (e) => {
                         radio.disabled = true;
                     });
                     
-                    
-                    
-
+                
                     genomeList.forEach(function(element){
                         index = genomeList.indexOf(element);
                         genomeSizeList.push(allGenomeSizes[index]);
                     })
 
-                    //console.log("GENOME LIST IS ", genomeList);
-                    //console.log("SIZE LIST IS ", genomeSizeList);
+                    console.log("GENOME LIST IS ", genomeList);
+                    console.log("SIZE LIST IS ", genomeSizeList);
                     showClusters();
                     }
                     else{
