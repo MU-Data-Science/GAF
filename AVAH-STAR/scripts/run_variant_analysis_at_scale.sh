@@ -48,6 +48,7 @@ usage()
   echo "                                          (1 -> all RDD partitions will use GPUs),"
   echo "                                          (2 -> every other partition will use GPUs), ... "
   echo " -F              - first-come, first-served approach for using GPUs in an RDD partition (default: entire RDD partition uses GPUs)"
+  echo " -S              - perform somatic variant calling (default: germline variant calling)"
   exit 1
 }
 
@@ -66,8 +67,9 @@ USE_GATK=0
 USE_GPU=0
 NUM_BUCKETS=0
 USE_FCFS=0
+USE_SOMATIC=0
 
-while getopts 'sfhBeGgFm:i:d:n:b:p:r:P:' value
+while getopts 'sSfhBeGgFm:i:d:n:b:p:r:P:' value
 do
   case $value in
     b) BATCH_SIZE=$OPTARG ;;
@@ -78,6 +80,7 @@ do
     p) NUM_PARTITIONS=$OPTARG ;;
     P) PARTITION_TYPE=$OPTARG ;;
     s) NAIVE=1 ;;
+    S) USE_SOMATIC=1 ;;
     f) FORK_JOIN=1 ;;
     B) BQSR_INDEL=1 ;;
     e) EARLY_RETRY=1 ;;
@@ -162,6 +165,10 @@ fi
 
 if [[ ${USE_GATK} -eq 1 ]]; then
     EXTRA_ARGS=${EXTRA_ARGS}" -G"
+fi
+
+if [[ ${USE_SOMATIC} -eq 1 ]]; then
+    EXTRA_ARGS=${EXTRA_ARGS}" -S"
 fi
 
 if [[ ${USE_GPU} -eq 1 ]]; then

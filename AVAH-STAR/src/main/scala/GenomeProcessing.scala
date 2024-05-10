@@ -44,6 +44,7 @@ object GenomeProcessing {
       -s                          naive, one sequence at-a-time
       -e                          early retry of failed sequences
       -G                          Use GATK pipeline (default: ADAM-Cannoli)
+      -S                          Somatic variant calling (default: Germline)
       -g                          Use GPUs when available (default: use CPUs only)
     """)
   }
@@ -77,6 +78,7 @@ object GenomeProcessing {
         case ("-e") :: tail => nextOption(map ++ Map('early_retry -> true), tail)
         case ("-G") :: tail => nextOption(map ++ Map('use_GATK -> true), tail)
         case ("-g") :: tail => nextOption(map ++ Map('use_GPUs -> true), tail)
+        case ("-S") :: tail => nextOption(map ++ Map('use_somatic -> true), tail)
         case ("-m") :: value :: tail => nextOption(map ++ Map('num_buckets -> value), tail)
         case ("-F") :: tail => nextOption(map ++ Map('use_FCFS -> true), tail)
         case value :: tail => println("Unknown option: " + value)
@@ -109,6 +111,7 @@ object GenomeProcessing {
     val useGPUs = options.getOrElse('use_GPUs, false).toString.toBoolean
     val numBuckets = options.getOrElse('num_buckets, 1).toString.toInt
     val useFCFS = options.getOrElse('use_FCFS, false).toString.toBoolean
+    val useSomatic = options.getOrElse('use_somatic, false).toString.toBoolean
 
     println("Reference genome: ", referenceGenome)
     println("Num. nodes: ", numNodes)
@@ -122,6 +125,7 @@ object GenomeProcessing {
     println("Use GPUs: ", useGPUs)
     println("No. buckets for load balancing with GPUs: ", numBuckets)
     println("First-come, first-served GPU allocation in an RDD partition: ", useFCFS)
+    println("Somatic variant calling: ", useSomatic)
 
     if (commandToExecute == null) {
       println("Option -c | --command is required.")
@@ -289,15 +293,15 @@ object GenomeProcessing {
                       case true => retrySequenceList
                           .map(x => executeAsync(cleanupFiles(x)))
                           .mapPartitions(it => await(it, batchSize = minBatchSize))
-                          .map(x => executeAsync(runFastqToBam(x._1, referenceGenome, useGPUs, numBuckets, useFCFS)))
+                          .map(x => executeAsync(runFastqToBam(x._1, referenceGenome, useGPUs, numBuckets, useFCFS, useSomatic)))
                           .mapPartitions(it => await(it, batchSize = minBatchSize))
-                          .map(x => executeAsync(runBWAMarkDuplicates(x._1, referenceGenome, useGPUs)))
+                          .map(x => executeAsync(runBWAMarkDuplicates(x._1, referenceGenome, useGPUs, useSomatic)))
                           .mapPartitions(it => await(it, batchSize = minBatchSize))
-                          .map(x => executeAsync(runSortSam(x._1, useGPUs)))
+                          .map(x => executeAsync(runSortSam(x._1, useGPUs, useSomatic)))
                           .mapPartitions(it => await(it, batchSize = minBatchSize))
-                          .map(x => executeAsync(runBQSR(x._1, referenceGenome, useGPUs)))
+                          .map(x => executeAsync(runBQSR(x._1, referenceGenome, useGPUs, useSomatic)))
                           .mapPartitions(it => await(it, batchSize = min(maxTasks, minBatchSize)))
-                          .map(x => executeAsync(runHaplotypeCaller(x._1, referenceGenome, useGPUs)))
+                          .map(x => executeAsync(runVariantCaller(x._1, referenceGenome, useGPUs, useSomatic)))
                           .mapPartitions(it => await(it, batchSize = minBatchSize))
                           .collect()
                     }
@@ -354,15 +358,15 @@ object GenomeProcessing {
 //                    .collect()
 
                 sortedSampleIDList
-                  .map(s => executeAsync(runFastqToBam(s._2, referenceGenome, useGPUs, numBuckets, useFCFS)))
+                  .map(s => executeAsync(runFastqToBam(s._2, referenceGenome, useGPUs, numBuckets, useFCFS, useSomatic)))
                   .mapPartitions(it => await(it, batchSize = min(maxTasks, minBatchSize)))
-                  .map(x => executeAsync(runBWAMarkDuplicates(x._1, referenceGenome, useGPUs)))
+                  .map(x => executeAsync(runBWAMarkDuplicates(x._1, referenceGenome, useGPUs, useSomatic)))
                   .mapPartitions(it => await(it, batchSize = min(maxTasks, minBatchSize)))
-                  .map(x => executeAsync(runSortSam(x._1, useGPUs)))
+                  .map(x => executeAsync(runSortSam(x._1, useGPUs, useSomatic)))
                   .mapPartitions(it => await(it, batchSize = min(maxTasks, minBatchSize)))
-////                  .map(x => executeAsync(runBQSR(x._1, referenceGenome, useGPUs)))
-////                  .mapPartitions(it => await(it, batchSize = min(maxTasks, minBatchSize)))
-                  .map(x => executeAsync(runHaplotypeCaller(x._1, referenceGenome, useGPUs)))
+                  .map(x => executeAsync(runBQSR(x._1, referenceGenome, useGPUs, useSomatic)))
+                  .mapPartitions(it => await(it, batchSize = min(maxTasks, minBatchSize)))
+                  .map(x => executeAsync(runVariantCaller(x._1, referenceGenome, useGPUs, useSomatic)))
                   .mapPartitions(it => await(it, batchSize = min(maxTasks, minBatchSize)))
                   .collect()
             }

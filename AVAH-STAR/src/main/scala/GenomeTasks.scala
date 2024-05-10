@@ -32,7 +32,7 @@ object GenomeTasks {
   }
 
   // Construct .bam file from FASTQ
-  def runFastqToBam[T](x: T, referenceGenome: String, useGPUs: Boolean, numBuckets: Int, useFCFS: Boolean):(T, Int) = {
+  def runFastqToBam[T](x: T, referenceGenome: String, useGPUs: Boolean, numBuckets: Int, useFCFS: Boolean, useSomatic: Boolean):(T, Int) = {
     val beginTime = Calendar.getInstance().getTime()
 
     println(s"Starting BAM_construction on ($x) at $beginTime")
@@ -48,16 +48,38 @@ object GenomeTasks {
 
     val GPU_alloc_mode = if (useFCFS == true) 0 else 1 // 0: first-come, first-served; 1: execute an entire RDD partition on a GPU
 
+    val normal = "normal"
+    val tumor = "tumor"
+
     try {
-      // Remove if already present
-      val retBam0 = Seq("rm", "-f", s"$dataDir/$sampleID"+"_1.fastq.gz", s"$dataDir/$sampleID"+"_2.fastq.gz").!
-      println(s"DeletingFASTQ $retBam0 $sampleID")
-      // Copy the FASTQ files to local storage
-      val retBam1 = Seq(s"$hdfsCmd", "dfs", "-get", s"$hdfsPrefix/${sampleID}"+"_?.fastq.gz", s"$dataDir").!
-      println(s"CopyingFASTQ $retBam1 $sampleID")
+      var retBam0 = -1
+      var retBam1 = -1
+
+      // Somatic variant calling
+      if (useSomatic == true) {
+        // Remove if already present
+        retBam0 = Seq("rm", "-f", s"$dataDir/$sampleID" + s"_$normal" + "_1.fastq.gz", s"$dataDir/$sampleID" + s"_$normal" + "_2.fastq.gz").!
+        println(s"DeletingFASTQ $retBam0 $sampleID $normal")
+        // Copy the FASTQ files to local storage
+        retBam1 = Seq(s"$hdfsCmd", "dfs", "-get", s"$hdfsPrefix/${sampleID}" + s"_$normal" + "_?.fastq.gz", s"$dataDir").!
+        println(s"CopyingFASTQ $retBam1 $sampleID $normal")
+
+        retBam0 += Seq("rm", "-f", s"$dataDir/$sampleID" + s"_$tumor" + "_1.fastq.gz", s"$dataDir/$sampleID" + s"_$tumor" + "_2.fastq.gz").!
+        println(s"DeletingFASTQ $retBam0 $sampleID $tumor")
+        // Copy the FASTQ files to local storage
+        retBam1 += Seq(s"$hdfsCmd", "dfs", "-get", s"$hdfsPrefix/${sampleID}" + s"_$tumor" + "_?.fastq.gz", s"$dataDir").!
+        println(s"CopyingFASTQ $retBam1 $sampleID $tumor")
+      }
+      else { // Germline variant calling
+        // Remove if already present
+        retBam0 = Seq("rm", "-f", s"$dataDir/$sampleID" + "_1.fastq.gz", s"$dataDir/$sampleID" + "_2.fastq.gz").!
+        println(s"DeletingFASTQ $retBam0 $sampleID")
+        // Copy the FASTQ files to local storage
+        retBam1 = Seq(s"$hdfsCmd", "dfs", "-get", s"$hdfsPrefix/${sampleID}" + "_?.fastq.gz", s"$dataDir").!
+        println(s"CopyingFASTQ $retBam1 $sampleID")
+      }
 
       // Convert to .bam
-
       if (useGPUs == true && partitionID % numBuckets == 0) {
         println(s"Starting Parabricks_fq2sam $sampleID $partitionID")
         val lockTimeout =
@@ -66,23 +88,64 @@ object GenomeTasks {
             case 1 => 30
             case _ => 0
           }
-        val retBam2 = Seq(s"$dataDir/run_parabricks.sh", "fq2bam", s"$lockTimeout", s"$dataDir:/workdir",
-          s"$dataDir:/outputdir", s"${referenceGenome}.fa", s"${sampleID}" + "_1.fastq.gz",
-          s"${sampleID}" + "_2.fastq.gz", s"${sampleID}" + "-final-sorted-bqsr.bam").!
+
+        var retBam2 = -1
+
+        if (useSomatic == true) {
+          retBam2 = Seq(s"$dataDir/run_parabricks.sh", "fq2bam", s"$lockTimeout", s"$dataDir:/workdir",
+            s"$dataDir:/outputdir", s"${referenceGenome}.fa", s"${sampleID}" + s"_$normal" + "_1.fastq.gz",
+            s"${sampleID}" + s"_$normal" + "_2.fastq.gz", s"${sampleID}" + s"_$normal" + "-final-sorted-bqsr.bam").!
+
+          retBam2 += Seq(s"$dataDir/run_parabricks.sh", "fq2bam", s"$lockTimeout", s"$dataDir:/workdir",
+            s"$dataDir:/outputdir", s"${referenceGenome}.fa", s"${sampleID}" + s"_$tumor" + "_1.fastq.gz",
+            s"${sampleID}" + s"_$tumor" + "_2.fastq.gz", s"${sampleID}" + s"_$tumor" + "-final-sorted-bqsr.bam").!
+        }
+        else {
+          retBam2 = Seq(s"$dataDir/run_parabricks.sh", "fq2bam", s"$lockTimeout", s"$dataDir:/workdir",
+            s"$dataDir:/outputdir", s"${referenceGenome}.fa", s"${sampleID}" + "_1.fastq.gz",
+            s"${sampleID}" + "_2.fastq.gz", s"${sampleID}" + "-final-sorted-bqsr.bam").!
+        }
 
         // If successful
         if (retBam2 == 0) {
-          // Copy .bam* to HDFS; include .bam.bai
-          val retBam3 = Seq(s"$hdfsCmd", "dfs", "-put",
-            s"$dataDir/${sampleID}-final-sorted-bqsr.bam",
-            s"$dataDir/${sampleID}-final-sorted-bqsr.bam.bai",
-            s"$hdfsPrefix/").!
+          var retBam3 = -1
 
+          // Copy .bam* to HDFS; include .bam.bai
+          if (useSomatic == true) {
+            // Copy .bam* to HDFS; include .bam.bai
+            retBam3 = Seq(s"$hdfsCmd", "dfs", "-put",
+              s"$dataDir/${sampleID}_${normal}-final-sorted-bqsr.bam",
+              s"$dataDir/${sampleID}_${normal}-final-sorted-bqsr.bam.bai",
+              s"$hdfsPrefix/").!
+            retBam3 += Seq(s"$hdfsCmd", "dfs", "-put",
+              s"$dataDir/${sampleID}_${tumor}-final-sorted-bqsr.bam",
+              s"$dataDir/${sampleID}_${tumor}-final-sorted-bqsr.bam.bai",
+              s"$hdfsPrefix/").!
+          }
+          else {
+            retBam3 = Seq(s"$hdfsCmd", "dfs", "-put",
+              s"$dataDir/${sampleID}-final-sorted-bqsr.bam",
+              s"$dataDir/${sampleID}-final-sorted-bqsr.bam.bai",
+              s"$hdfsPrefix/").!
+          }
           println(s"Completed Parabricks_fq2bam and copying BAM: $retBam2 $retBam3 $sampleID")
+          println(s"Completed-Parabricks_fq2bam-$sampleID")
+
+          var retDel = -1
           // Delete from $dataDir
-          val retDel = Seq("sudo", "rm", "-f",
-            s"$dataDir/${sampleID}-final-sorted-bqsr.bam",
-            s"$dataDir/${sampleID}-final-sorted-bqsr.bam.bai").!
+          if (useSomatic == true) {
+            retDel = Seq("sudo", "rm", "-f",
+              s"$dataDir/${sampleID}_${normal}-final-sorted-bqsr.bam",
+              s"$dataDir/${sampleID}_${normal}-final-sorted-bqsr.bam.bai").!
+            retDel += Seq("sudo", "rm", "-f",
+              s"$dataDir/${sampleID}_${tumor}-final-sorted-bqsr.bam",
+              s"$dataDir/${sampleID}_${tumor}-final-sorted-bqsr.bam.bai").!
+          }
+          else {
+            retDel = Seq("sudo", "rm", "-f",
+              s"$dataDir/${sampleID}-final-sorted-bqsr.bam",
+              s"$dataDir/${sampleID}-final-sorted-bqsr.bam.bai").!
+          }
           retBam = retBam2 + retBam3
         }
         else {
@@ -94,42 +157,101 @@ object GenomeTasks {
       // Switch to CPU if no GPUs or GPU execution failed
       if (retBam != 0) {
         println(s"Starting GATK_FastqToSam $sampleID")
-        val retMkdir = Seq("mkdir", s"$dataDir/tmp_$sampleID").!
-        val retBam2 = Seq(s"$gatk", "FastqToSam",
-          "-F1", s"$dataDir/$sampleID" + "_1.fastq.gz",
-          "-F2", s"$dataDir/$sampleID" + "_2.fastq.gz",
-          "-O", s"$dataDir/${sampleID}-unaligned.bam",
-          "--SAMPLE_NAME", "mysample",
-          "--READ_GROUP_NAME", "mygroup",
-          "--PLATFORM", "illumina",
-          "--LIBRARY_NAME", "mylib",
-          "--TMP_DIR", s"$dataDir/tmp_$sampleID").!
-        println(s"FastqToSamCreation $retBam2 $sampleID")
+        var retMkdir = -1
+        var retBam2 = -1
+
+        if (useSomatic == true) {
+          retMkdir = Seq("mkdir", s"$dataDir/tmp_${sampleID}_${normal}").!
+          retBam2 = Seq(s"$gatk", "FastqToSam",
+            "-F1", s"$dataDir/$sampleID" + s"_${normal}" + "_1.fastq.gz",
+            "-F2", s"$dataDir/$sampleID" + s"_${normal}" + "_2.fastq.gz",
+            "-O", s"$dataDir/${sampleID}_${normal}-unaligned.bam",
+            "--SAMPLE_NAME", "normalsample",
+            "--READ_GROUP_NAME", "mygroup",
+            "--PLATFORM", "illumina",
+            "--LIBRARY_NAME", "mylib",
+            "--TMP_DIR", s"$dataDir/tmp_${sampleID}_${normal}").!
+          println(s"FastqToSamCreation $retBam2 $sampleID $normal")
+
+          retMkdir += Seq("mkdir", s"$dataDir/tmp_${sampleID}_${tumor}").!
+          retBam2 += Seq(s"$gatk", "FastqToSam",
+            "-F1", s"$dataDir/$sampleID" + s"_${tumor}" + "_1.fastq.gz",
+            "-F2", s"$dataDir/$sampleID" + s"_${tumor}" + "_2.fastq.gz",
+            "-O", s"$dataDir/${sampleID}_${tumor}-unaligned.bam",
+            "--SAMPLE_NAME", "tumorsample",
+            "--READ_GROUP_NAME", "mygroup",
+            "--PLATFORM", "illumina",
+            "--LIBRARY_NAME", "mylib",
+            "--TMP_DIR", s"$dataDir/tmp_${sampleID}_${tumor}").!
+          println(s"FastqToSamCreation $retBam2 $sampleID $tumor")
+        }
+        else {
+          retMkdir = Seq("mkdir", s"$dataDir/tmp_$sampleID").!
+          retBam2 = Seq(s"$gatk", "FastqToSam",
+            "-F1", s"$dataDir/$sampleID" + "_1.fastq.gz",
+            "-F2", s"$dataDir/$sampleID" + "_2.fastq.gz",
+            "-O", s"$dataDir/${sampleID}-unaligned.bam",
+            "--SAMPLE_NAME", "mysample",
+            "--READ_GROUP_NAME", "mygroup",
+            "--PLATFORM", "illumina",
+            "--LIBRARY_NAME", "mylib",
+            "--TMP_DIR", s"$dataDir/tmp_$sampleID").!
+          println(s"FastqToSamCreation $retBam2 $sampleID")
+        }
 
         // Copy .bam to HDFS
-        val retBam3 = Seq(s"$hdfsCmd", "dfs", "-put", s"$dataDir/${sampleID}-unaligned.bam", s"$hdfsPrefix/").!
-        println(s"CopyingBAM $retBam3 $sampleID")
+        var retBam3 = -1
+
+        if (useSomatic == true) {
+          retBam3 = Seq(s"$hdfsCmd", "dfs", "-put", s"$dataDir/${sampleID}_${normal}-unaligned.bam", s"$hdfsPrefix/").!
+          println(s"CopyingBAM $retBam3 $sampleID $normal")
+
+          retBam3 += Seq(s"$hdfsCmd", "dfs", "-put", s"$dataDir/${sampleID}_${tumor}-unaligned.bam", s"$hdfsPrefix/").!
+          println(s"CopyingBAM $retBam3 $sampleID $tumor")
+        }
+        else {
+          retBam3 = Seq(s"$hdfsCmd", "dfs", "-put", s"$dataDir/${sampleID}-unaligned.bam", s"$hdfsPrefix/").!
+          println(s"CopyingBAM $retBam3 $sampleID")
+        }
 
         // Delete from $dataDir
-        val retDel = Seq("rm", "-f", s"$dataDir/${sampleID}-unaligned.bam", s"$dataDir/tmp_$sampleID").!
+        var retDel = -1
+
+        if (useSomatic == true) {
+          retDel = Seq("rm", "-f", s"$dataDir/${sampleID}_${normal}-unaligned.bam", s"$dataDir/tmp_${sampleID}_${normal}").!
+          retDel += Seq("rm", "-f", s"$dataDir/${sampleID}_${tumor}-unaligned.bam", s"$dataDir/tmp_${sampleID}_${tumor}").!
+        }
+        else {
+          retDel = Seq("rm", "-f", s"$dataDir/${sampleID}-unaligned.bam", s"$dataDir/tmp_$sampleID").!
+        }
+
         retBam = retBam2 + retBam3
         println(s"Completed GATK_FastqToSam $sampleID: $retBam")
+        println(s"Completed-GATK_FastqToSam-$sampleID")
       }
     } catch {
       case e: Exception => print(s"Exception in FastqToBam, check sequence ID $x")
     }
 
     // Delete from $dataDir
-    val retDel = Seq("rm", "-f", s"$dataDir/${sampleID}_1.fastq.gz", s"$dataDir/${sampleID}_2.fastq.gz").!
+    var retDel = -1
+
+    if (useSomatic == true) {
+      retDel = Seq("rm", "-f", s"$dataDir/${sampleID}_${normal}_1.fastq.gz", s"$dataDir/${sampleID}_${normal}_2.fastq.gz").!
+      retDel += Seq("rm", "-f", s"$dataDir/${sampleID}_${tumor}_1.fastq.gz", s"$dataDir/${sampleID}_${tumor}_2.fastq.gz").!
+    }
+    else {
+      retDel = Seq("rm", "-f", s"$dataDir/${sampleID}_1.fastq.gz", s"$dataDir/${sampleID}_2.fastq.gz").!
+    }
 
     val endTime = Calendar.getInstance().getTime()
     println(s"Completed BAM construction on ($x) at ${endTime}, return values: $retBam")
-
+    println(s"Completed-BAM-$x")
     (x, retBam)
   }
 
   // BWA with MarkDuplicates
-  def runBWAMarkDuplicates[T](x: T, referenceGenome: String, useGPUs: Boolean):(T, Int) = {
+  def runBWAMarkDuplicates[T](x: T, referenceGenome: String, useGPUs: Boolean, useSomatic: Boolean):(T, Int) = {
     val beginTime = Calendar.getInstance().getTime()
     println(s"Starting BWAMarkDuplicates on ($x) at $beginTime")
     //val sampleID = x.toString
@@ -141,6 +263,9 @@ object GenomeTasks {
     val dataDir = "file://" + sys.env("DATA_DIR")
     val dataDirLocal = sys.env("DATA_DIR") // Needed for local file operations via shell
 
+    val normal = "normal"
+    val tumor = "tumor"
+
     if (useGPUs == true) {
       println("Do nothing!")
     }
@@ -151,22 +276,71 @@ object GenomeTasks {
       //val retDel = Seq(s"$hdfsCmd", "dfs", "-rm", "-r", "-skipTrash", s"/${sampleID}.bam_*").!
 
       // Test if input file exists before launching the job
-      val retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}-unaligned.bam").!
-      if (retFileExists == 0) {
-        val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_$sampleID").!
-        val execBWA = Seq(s"$gatk", "BwaAndMarkDuplicatesPipelineSpark",
-          "-I", s"$hdfsPrefix/${sampleID}-unaligned.bam",
-          "-O", s"$hdfsPrefix/$sampleID" + "-final.bam",
-          "-R", s"$dataDir/$referenceGenome.fa",
-          "--tmp-dir", s"$dataDir/tmp_$sampleID",
-          "--", "--spark-runner", "SPARK",
-          "--spark-master", "yarn",
-          "--num-executors", "8",
-          "--conf", "spark.executor.memory=24g",
-          "--conf", "spark.executor.memoryOverhead=5g").!
-        // Delete tmp directory
-        val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_$sampleID").!
-        retBWA = execBWA
+      var retFileExists = -1
+
+      if (useSomatic == true) {
+        retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}_${normal}-unaligned.bam").!
+
+        if (retFileExists == 0) {
+          val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_${sampleID}_${normal}").!
+          val execBWA = Seq(s"$gatk", "BwaAndMarkDuplicatesPipelineSpark",
+            "-I", s"$hdfsPrefix/${sampleID}_${normal}-unaligned.bam",
+            "-O", s"$hdfsPrefix/$sampleID" + s"_${normal}"+ "-final.bam",
+            "-R", s"$dataDir/$referenceGenome.fa",
+            "--tmp-dir", s"$dataDir/tmp_${sampleID}_${normal}",
+            "--", "--spark-runner", "SPARK",
+            "--spark-master", "yarn",
+            "--num-executors", "8",
+            "--conf", "spark.executor.memory=24g",
+            "--conf", "spark.executor.memoryOverhead=5g").!
+          // Delete tmp directory
+          val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_${sampleID}_${normal}").!
+          retBWA = execBWA
+        }
+        else {
+          println(s"Skipping BwaAndMarkDuplicatesPipelineSpark for ${sampleID}_${normal}")
+        }
+
+        retFileExists += Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}_${tumor}-unaligned.bam").!
+
+        if (retFileExists == 0) {
+          val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_${sampleID}_${tumor}").!
+          val execBWA = Seq(s"$gatk", "BwaAndMarkDuplicatesPipelineSpark",
+            "-I", s"$hdfsPrefix/${sampleID}_${tumor}-unaligned.bam",
+            "-O", s"$hdfsPrefix/$sampleID" + s"_${tumor}" + "-final.bam",
+            "-R", s"$dataDir/$referenceGenome.fa",
+            "--tmp-dir", s"$dataDir/tmp_${sampleID}_${tumor}",
+            "--", "--spark-runner", "SPARK",
+            "--spark-master", "yarn",
+            "--num-executors", "8",
+            "--conf", "spark.executor.memory=24g",
+            "--conf", "spark.executor.memoryOverhead=5g").!
+          // Delete tmp directory
+          val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_${sampleID}_${tumor}").!
+          retBWA += execBWA
+        }
+        else {
+          println(s"Skipping BwaAndMarkDuplicatesPipelineSpark for ${sampleID}_${tumor}")
+        }
+      }
+      else {
+        retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}-unaligned.bam").!
+        if (retFileExists == 0) {
+          val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_$sampleID").!
+          val execBWA = Seq(s"$gatk", "BwaAndMarkDuplicatesPipelineSpark",
+            "-I", s"$hdfsPrefix/${sampleID}-unaligned.bam",
+            "-O", s"$hdfsPrefix/$sampleID" + "-final.bam",
+            "-R", s"$dataDir/$referenceGenome.fa",
+            "--tmp-dir", s"$dataDir/tmp_$sampleID",
+            "--", "--spark-runner", "SPARK",
+            "--spark-master", "yarn",
+            "--num-executors", "8",
+            "--conf", "spark.executor.memory=24g",
+            "--conf", "spark.executor.memoryOverhead=5g").!
+          // Delete tmp directory
+          val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_$sampleID").!
+          retBWA = execBWA
+        }
       }
     }
     catch {
@@ -175,12 +349,13 @@ object GenomeTasks {
 
     val endTime = Calendar.getInstance().getTime()
     println(s"Completed BWAMarkDuplicates on ($x) ended at $endTime; return values bwa: $retBWA")
+    println(s"Completed-BWAMarkDuplicates-$x")
 
     (x, retBWA)
   }
 
   // SortSam before invoking HaplotypeCaller
-  def runSortSam[T](x: T, useGPUs: Boolean):(T, Int) = {
+  def runSortSam[T](x: T, useGPUs: Boolean, useSomatic: Boolean):(T, Int) = {
     val beginTime = Calendar.getInstance().getTime()
     println(s"Starting SortSam on ($x) at $beginTime")
     //val sampleID = x.toString
@@ -192,6 +367,9 @@ object GenomeTasks {
     val dataDir = "file://" + sys.env("DATA_DIR")
     val dataDirLocal = sys.env("DATA_DIR") // Needed for local file operations via shell
 
+    val normal = "normal"
+    val tumor = "tumor"
+
     if (useGPUs == true) {
       println("Do nothing!")
     }
@@ -199,19 +377,60 @@ object GenomeTasks {
     var retSortSam = -1
     try {
       // Test if input file exists before launching the job
-      val retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}-final.bam").!
-      if (retFileExists == 0) {
-        val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_$sampleID").!
-        retSortSam = Seq(s"$gatk", "SortSamSpark",
-          "-I", s"$hdfsPrefix/${sampleID}-final.bam",
-          "-O", s"$hdfsPrefix/${sampleID}-final-sorted-bqsr.bam",
-          "--tmp-dir", s"$dataDir/tmp_$sampleID",
-          "--", "--spark-runner", "SPARK",
-          "--spark-master", "yarn",
-          "--conf", "spark.executor.memory=12g").!
+      var retFileExists = -1
 
-        // Delete tmp directory
-        val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_$sampleID").!
+      if (useSomatic == true) {
+        retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}_${normal}-final.bam").!
+        if (retFileExists == 0) {
+          val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_${sampleID}_${normal}").!
+          retSortSam = Seq(s"$gatk", "SortSamSpark",
+            "-I", s"$hdfsPrefix/${sampleID}_${normal}-final.bam",
+            "-O", s"$hdfsPrefix/${sampleID}_${normal}-final-sorted.bam", // change to final-sorted-bqsr.bam if skipping BQSR step
+            "--tmp-dir", s"$dataDir/tmp_${sampleID}_${normal}",
+            "--", "--spark-runner", "SPARK",
+            "--spark-master", "yarn",
+            "--conf", "spark.executor.memory=12g").!
+
+          // Delete tmp directory
+          val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_${sampleID}_${normal}").!
+        }
+        else {
+          println(s"Skipping SortSam for ${sampleID}_${normal}")
+        }
+
+        retFileExists += Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}_${tumor}-final.bam").!
+        if (retFileExists == 0) {
+          val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_${sampleID}_${tumor}").!
+          retSortSam += Seq(s"$gatk", "SortSamSpark",
+            "-I", s"$hdfsPrefix/${sampleID}_${tumor}-final.bam",
+            "-O", s"$hdfsPrefix/${sampleID}_${tumor}-final-sorted.bam", // change to final-sorted-bqsr.bam if skipping BQSR step
+            "--tmp-dir", s"$dataDir/tmp_${sampleID}_${tumor}",
+            "--", "--spark-runner", "SPARK",
+            "--spark-master", "yarn",
+            "--conf", "spark.executor.memory=12g").!
+
+          // Delete tmp directory
+          val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_${sampleID}_${tumor}").!
+        }
+        else {
+          println(s"Skipping SortSam for ${sampleID}_${tumor}")
+        }
+      }
+      else {
+        retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}-final.bam").!
+        if (retFileExists == 0) {
+          val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_$sampleID").!
+          retSortSam = Seq(s"$gatk", "SortSamSpark",
+            "-I", s"$hdfsPrefix/${sampleID}-final.bam",
+            "-O", s"$hdfsPrefix/${sampleID}-final-sorted.bam", // change to final-sorted-bqsr.bam if skipping BQSR step
+            "--tmp-dir", s"$dataDir/tmp_$sampleID",
+            "--", "--spark-runner", "SPARK",
+            "--spark-master", "yarn",
+            "--conf", "spark.executor.memory=12g").!
+
+          // Delete tmp directory
+          val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_$sampleID").!
+        }
       }
     }
     catch {
@@ -220,12 +439,12 @@ object GenomeTasks {
 
     val endTime = Calendar.getInstance().getTime()
     println(s"Completed SortSam on ($x) ended at $endTime; return values SortSam: $retSortSam")
-
+    println(s"Completed-SortSam-$x")
     (x, retSortSam)
   }
 
-  // BQSR before invoking HaplotypeCaller
-  def runBQSR[T](x: T, referenceGenome: String, useGPUs: Boolean): (T, Int) = {
+  // BQSR before invoking VariantCaller
+  def runBQSR[T](x: T, referenceGenome: String, useGPUs: Boolean, useSomatic: Boolean): (T, Int) = {
     val beginTime = Calendar.getInstance().getTime()
     println(s"Starting GATK_BQSR on ($x) at $beginTime")
     //val sampleID = x.toString
@@ -239,6 +458,9 @@ object GenomeTasks {
     val knownIndels = "file://" + sys.env("KNOWN_INDELS")
     val knownSNPs = "file://" + sys.env("KNOWN_SNPS")
 
+    val normal = "normal"
+    val tumor = "tumor"
+
     //    if (useGPUs == "true") {
     //      println(s"Skipped SortSam on ($x)")
     //      return (x, 0)
@@ -247,24 +469,75 @@ object GenomeTasks {
     var retBQSR = -1
     try {
       // Test if input file exists before launching the job
-      val retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}-final-sorted.bam").!
-      if (retFileExists == 0) {
-        val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_$sampleID").!
-        retBQSR = Seq(s"$gatk", "BQSRPipelineSpark",
-          "-R", s"$dataDir/$referenceGenome.fa",
-          "-I", s"$hdfsPrefix/${sampleID}-final-sorted.bam",
-          "-O", s"$hdfsPrefix/${sampleID}-final-sorted-bqsr.bam",
-          "--known-sites", s"${knownIndels}",
-          "--known-sites", s"${knownSNPs}",
-          "--tmp-dir", s"$dataDir/tmp_$sampleID",
-          "--", "--spark-runner", "SPARK",
-          "--spark-master", "yarn",
-          "--num-executors", "4",
-          "--conf", "spark.executor.memory=6g",
-          "--conf", "spark.executor.memoryOverhead=5g").!
+      var retFileExists = -1
 
-        // Delete tmp directory
-        val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_$sampleID").!
+      if (useSomatic == true) {
+        retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}_${normal}-final-sorted.bam").!
+        if (retFileExists == 0) {
+          val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_${sampleID}_${normal}").!
+          retBQSR = Seq(s"$gatk", "BQSRPipelineSpark",
+            "-R", s"$dataDir/$referenceGenome.fa",
+            "-I", s"$hdfsPrefix/${sampleID}_${normal}-final-sorted.bam",
+            "-O", s"$hdfsPrefix/${sampleID}_${normal}-final-sorted-bqsr.bam",
+            "--known-sites", s"${knownIndels}",
+            "--known-sites", s"${knownSNPs}",
+            "--tmp-dir", s"$dataDir/tmp_${sampleID}_${normal}",
+            "--", "--spark-runner", "SPARK",
+            "--spark-master", "yarn",
+            "--num-executors", "6",
+            "--conf", "spark.executor.memory=20g",
+            "--conf", "spark.executor.memoryOverhead=5g").!
+
+          // Delete tmp directory
+          val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_${sampleID}_${normal}").!
+        }
+        else {
+          println(s"Skipping BQSR for ${sampleID}_${normal}")
+        }
+
+        retFileExists += Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}_${tumor}-final-sorted.bam").!
+        if (retFileExists == 0) {
+          val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_${sampleID}_${tumor}").!
+          retBQSR += Seq(s"$gatk", "BQSRPipelineSpark",
+            "-R", s"$dataDir/$referenceGenome.fa",
+            "-I", s"$hdfsPrefix/${sampleID}_${tumor}-final-sorted.bam",
+            "-O", s"$hdfsPrefix/${sampleID}_${tumor}-final-sorted-bqsr.bam",
+            "--known-sites", s"${knownIndels}",
+            "--known-sites", s"${knownSNPs}",
+            "--tmp-dir", s"$dataDir/tmp_${sampleID}_${tumor}",
+            "--", "--spark-runner", "SPARK",
+            "--spark-master", "yarn",
+            "--num-executors", "6",
+            "--conf", "spark.executor.memory=20g",
+            "--conf", "spark.executor.memoryOverhead=5g").!
+
+          // Delete tmp directory
+          val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_${sampleID}_${tumor}").!
+        }
+        else {
+          println(s"Skipping BQSR for ${sampleID}_${tumor}")
+        }
+      }
+      else {
+        retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}-final-sorted.bam").!
+        if (retFileExists == 0) {
+          val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_$sampleID").!
+          retBQSR = Seq(s"$gatk", "BQSRPipelineSpark",
+            "-R", s"$dataDir/$referenceGenome.fa",
+            "-I", s"$hdfsPrefix/${sampleID}-final-sorted.bam",
+            "-O", s"$hdfsPrefix/${sampleID}-final-sorted-bqsr.bam",
+            "--known-sites", s"${knownIndels}",
+            "--known-sites", s"${knownSNPs}",
+            "--tmp-dir", s"$dataDir/tmp_$sampleID",
+            "--", "--spark-runner", "SPARK",
+            "--spark-master", "yarn",
+            "--num-executors", "6",
+            "--conf", "spark.executor.memory=20g",
+            "--conf", "spark.executor.memoryOverhead=5g").!
+
+          // Delete tmp directory
+          val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_$sampleID").!
+        }
       }
     }
     catch {
@@ -273,14 +546,20 @@ object GenomeTasks {
 
     val endTime = Calendar.getInstance().getTime()
     println(s"Completed GATK_BQSR on ($x) ended at $endTime; return values BQSR: $retBQSR")
+    println(s"Completed-GATK_BQSR-$x")
 
     (x, retBQSR)
   }
 
-  // HaplotypeCaller
-  def runHaplotypeCaller[T](x: T, referenceGenome: String, useGPUs: Boolean):(T, Int) = {
+  // HaplotypeCaller (germline) or Mutect2 (somatic)
+  def runVariantCaller[T](x: T, referenceGenome: String, useGPUs: Boolean, useSomatic: Boolean):(T, Int) = {
     val beginTime = Calendar.getInstance().getTime()
-    println(s"Starting GATK_HaplotypeCaller on ($x) at $beginTime")
+    if (useSomatic == true) {
+      println(s"Starting GATK_Mutect2 on ($x) at $beginTime")
+    }
+    else {
+      println(s"Starting GATK_HaplotypeCaller on ($x) at $beginTime")
+    }
     //val sampleID = x.toString
     val (sampleID, partitionID) = splitSampleInfo(x.toString)
 
@@ -290,7 +569,10 @@ object GenomeTasks {
     val dataDirLocal = sys.env("DATA_DIR") // Needed for local file operations via shell
     val gatk = sys.env("GATK_HOME") + "/gatk"
 
-    var retHaplotypeCaller = -1
+    val normal = "normal"
+    val tumor = "tumor"
+
+    var retVariantCaller = -1
     if (useGPUs == true) {
       println("Do nothing!")
     }
@@ -302,56 +584,110 @@ object GenomeTasks {
         // Need to copy the .bam file from HDFS to local
         println(s"Starting Parabricks_Haplotypecaller")
         val lockTimeout = 10000
-        retHaplotypeCaller = Seq(s"$dataDir/run_parabricks.sh", "haplotypecaller", s"$lockTimeout", s"$dataDir:/workdir",
+        retVariantCaller = Seq(s"$dataDir/run_parabricks.sh", "haplotypecaller", s"$lockTimeout", s"$dataDir:/workdir",
           s"$dataDir:/outputdir", s"${referenceGenome}.fa", s"${sampleID}-final-sorted-bqsr.bam",
           s"${sampleID}.vcf").!
 
-        if (retHaplotypeCaller == 0) {
+        if (retVariantCaller == 0) {
           val retCopyvcf = Seq(s"$hdfsCmd", "dfs", "-put", s"${dataDir}/${sampleID}.vcf", s"/${sampleID}.vcf").!
         }
         println(s"Done with Parabricks_Haplotypecaller")
       }
 
-      if (retHaplotypeCaller != 0) {
+      if (retVariantCaller != 0) {
         // Test if input file exists before launching the job
-        val retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}-final-sorted-bqsr.bam").!
-        if (retFileExists == 0) {
-          val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_$sampleID").!
-          retHaplotypeCaller = Seq(s"$gatk", "HaplotypeCallerSpark",
-            "-R", s"$dataDir/$referenceGenome.fa",
-            "-I", s"$hdfsPrefix/${sampleID}-final-sorted-bqsr.bam",
-            //          s"$hdfsPrefix/${sampleID}-final-sorted.bam",
-            "-O", s"$hdfsPrefix/${sampleID}.vcf",
-            "--tmp-dir", s"$dataDir/tmp_$sampleID",
-            "--", "--spark-runner", "SPARK",
-            "--spark-master", "yarn",
-            "--conf", "spark.executor.memory=24g").!
+        var retFileExists = -1
 
-          // Delete tmp directory
-          val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_$sampleID").!
+        if (useSomatic == true) {
+          retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}_${normal}-final-sorted-bqsr.bam").!
+          print(s"RetFileExists1: $retFileExists")
+          retFileExists += Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}_${tumor}-final-sorted-bqsr.bam").!
+          print(s"RetFileExists2: $retFileExists")
+
+          if (retFileExists == 0) {
+            // Copy the files to $dataDir
+            var copyToLocal = Seq(s"$hdfsCmd", "dfs", "-get", s"$hdfsPrefix/${sampleID}_${normal}-final-sorted-bqsr.bam*", s"${dataDir}").!
+            copyToLocal = Seq(s"$hdfsCmd", "dfs", "-get", s"$hdfsPrefix/${sampleID}_${tumor}-final-sorted-bqsr.bam*", s"${dataDir}").!
+            val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_${sampleID}").!
+            println("Invoking Mutect2/GATK")
+            retVariantCaller = Seq(s"$gatk",
+              "--java-options", "-Xmx20g",
+              "Mutect2",
+              "-R", s"$dataDir/$referenceGenome.fa",
+              "-I", s"$dataDir/${sampleID}_${normal}-final-sorted-bqsr.bam",
+              "-I", s"$dataDir/${sampleID}_${tumor}-final-sorted-bqsr.bam",
+              "-normal", "normalsample",
+              "-O", s"$dataDirLocal/${sampleID}.vcf.gz", // Does not like $dataDir
+              "-L", "chr1",
+              "--native-pair-hmm-threads", "8",
+              "--tmp-dir", s"$dataDir/tmp_${sampleID}").!
+            println(s"Mutect2/GATK caller: $retVariantCaller")
+
+            // for hg38, access them using gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz
+
+            // Copy .vcf file to HDFS
+            val copyToHDFS = Seq(s"$hdfsCmd", "dfs", "-put", s"$dataDir/${sampleID}.vcf.gz", s"$hdfsPrefix/").!
+
+            // Delete the .vcf.gz file in local dir
+            val retDelVCF = Seq("rm", "-rf", s"$dataDirLocal/${sampleID}.vcf.gz*").!
+
+            // Delete tmp directory
+            val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_${sampleID}").!
+          }
+          else {
+            println(s"Skipping Mutect2 for ${sampleID}")
+          }
+        }
+        else {
+          retFileExists = Seq(s"$hdfsCmd", "dfs", "-test", "-e", s"$hdfsPrefix/${sampleID}-final-sorted-bqsr.bam").!
+          if (retFileExists == 0) {
+            val retMkdir = Seq("mkdir", s"$dataDirLocal/tmp_$sampleID").!
+            retVariantCaller = Seq(s"$gatk", "HaplotypeCallerSpark",
+              "-R", s"$dataDir/$referenceGenome.fa",
+              "-I", s"$hdfsPrefix/${sampleID}-final-sorted-bqsr.bam",
+              "-O", s"$hdfsPrefix/${sampleID}.vcf",
+              "--tmp-dir", s"$dataDir/tmp_$sampleID",
+              "--", "--spark-runner", "SPARK",
+              "--spark-master", "yarn",
+              "--conf", "spark.executor.memory=24g").!
+
+            // Delete tmp directory
+            val retDel = Seq("rm", "-rf", s"$dataDirLocal/tmp_$sampleID").!
+          }
         }
       }
-
     } catch {
-      case e: Exception => print(s"Exception in HaplotypeCaller, check sequence ID $x")
+      case e: Exception => print(s"Exception in HaplotypeCaller/Mutect2, check sequence ID $x")
     }
-
-    // Delete all intermediate files as they consume a lot of space
-
-    val retDelbam = Seq(s"$hdfsCmd", "dfs", "-rm", "-r", "-skipTrash", s"/${sampleID}-*.bam*").!
 
     // Create a empty .retry file
     val retryExt = ".retry"
 
     val retCreateRetryExt =
-      if (retHaplotypeCaller != 0) {Seq(s"$hdfsCmd", "dfs", "-touchz", s"/${sampleID}${retryExt}").!} else {0}
+      if (retVariantCaller != 0) {Seq(s"$hdfsCmd", "dfs", "-touchz", s"$hdfsPrefix/${sampleID}${retryExt}").!} else {0}
 
     val endTime = Calendar.getInstance().getTime()
-    println(s"Completed GATK_HaplotypeCaller on ($x) ended at $endTime; return values $retHaplotypeCaller; " +
-      s"delete return values: ${retDelbam} " +
-      s"create $retryExt file return value: ${retCreateRetryExt} ")
 
-    (x, retHaplotypeCaller)
+    // Delete all intermediate files as they consume a lot of space
+    if (useSomatic == true) {
+      val retDelbam = Seq(s"$hdfsCmd", "dfs", "-rm", "-r", "-skipTrash", s"$hdfsPrefix/${sampleID}_*-*.bam*").!
+
+      println(s"Completed GATK_Mutect2 on ($x) ended at $endTime; return values $retVariantCaller; " +
+        s"delete return values: ${retDelbam} " +
+        s"create $retryExt file return value: ${retCreateRetryExt} ")
+
+      println(s"Completed-GATK_Mutect2-$x")
+    }
+    else {
+      val retDelbam = Seq(s"$hdfsCmd", "dfs", "-rm", "-r", "-skipTrash", s"$hdfsPrefix/${sampleID}-*.bam*").!
+
+      println(s"Completed GATK_HaplotypeCaller on ($x) ended at $endTime; return values $retVariantCaller; " +
+        s"delete return values: ${retDelbam} " +
+        s"create $retryExt file return value: ${retCreateRetryExt} ")
+
+      println(s"Completed-GATK_HaplotypeCaller-$x")
+    }
+    (x, retVariantCaller)
   }
 
   // ADAM-Cannoli pipeline stages
