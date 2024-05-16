@@ -485,6 +485,7 @@ async function showClusters(){
             autoSelectionBtn.classList.remove("hover-effect");
             autoSelectionBtn.style.borderColor = "lightgray";
             autoSelectionBtn.style.opacity = "60%";
+            autoSelectionBtn.style.cursor ="default";
         }
     })
 
@@ -815,11 +816,13 @@ selectionOptions1.addEventListener('click', (e) => {
         e.target.style.backgroundColor = "lightgray";
         e.target.style.borderColor = "lightgray";
         e.target.style.opacity = "60%";
+        
 
         const buttons = document.querySelectorAll("#selection-options1 .btn")
         buttons.forEach(function(button) {
             button.classList.remove("hover-effect");
             button.disabled = true;
+            button.style.cursor ="default";
           });
 
         // e.target.classList.remove("hover-effect");
@@ -902,6 +905,7 @@ selectionOptions1.addEventListener('click', (e) => {
                     buttonWithId.style.backgroundColor = "lightgray";
                     buttonWithId.style.borderColor = "lightgray";
                     buttonWithId.style.opacity = "60%";
+                    buttonWithId.style.cursor = "default";
 
                     showClusters();
 
@@ -1028,6 +1032,7 @@ selectionOptions1.addEventListener('click', (e) => {
                     buttons.forEach(function(button) {
                             button.classList.remove("hover-effect");
                             button.disabled = true;
+                            button.style.cursor = "default"; 
                           });
                     
                     
@@ -1049,6 +1054,7 @@ selectionOptions1.addEventListener('click', (e) => {
                     buttonWithId.style.backgroundColor = "lightgray";
                     buttonWithId.style.borderColor = "lightgray";
                     buttonWithId.style.opacity = "60%";
+                    buttonWithId.style.cursor = "default";
 
 
                     showClusters();
