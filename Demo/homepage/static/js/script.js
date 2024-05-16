@@ -150,7 +150,7 @@ function createVcfButtons(name,link){
 }
 
 
-function submit() {
+function submitWithEmailUsername() {
     console.log("CLUSTER IS ",cluster);
    // buttonWithId.style.backgroundColor = "lightgray";
     const buttons = document.querySelectorAll("#selection-options3 .btn2")
@@ -174,6 +174,8 @@ function submit() {
         clusterDiv.style.visibility = 'hidden';
       });
     
+
+    // email/username input 
     selectionHeading2.textContent = "4. Enter your name"
     //reset previous content 
     while(selectionOptions2.firstChild){
@@ -274,6 +276,87 @@ function submit() {
 
     event.preventDefault();
 }
+
+
+function submit() {
+    console.log("CLUSTER IS ",cluster);
+   // buttonWithId.style.backgroundColor = "lightgray";
+    const buttons = document.querySelectorAll("#selection-options3 .btn2");
+    buttons.forEach(function(button) {
+        button.classList.remove("hover-effect");
+        button.disabled = true;
+      });
+    
+    var radioButtons = document.querySelectorAll('input[type="radio"]');
+      radioButtons.forEach(function (radio) {
+          radio.disabled = true;
+          console.log("disabled radio buttons");
+      });  
+
+    const autoBtn = document.getElementById('autoBtnID');
+
+    //hide other divs
+      window.requestAnimationFrame(function() {
+        autoBtn.style.display = 'none';
+        pipelineDiv.style.visibility = 'hidden';
+        clusterDiv.style.visibility = 'hidden';
+      });
+
+        selectionHeading2.textContent = "4. Processing Genome. Cluster ("+cluster.charAt(2)+")";
+        selectionHeading2.textContent = "4. Processing Genome. Cluster (1)";
+        while(selectionOptions2.firstChild){
+            selectionOptions2.removeChild(selectionOptions2.firstChild);
+        }
+
+        const getData = document.getElementById('img-srcs');
+        const imgUrl = getData.getAttribute('data-genome-url');
+        const image = document.createElement("img");
+        image.src = imgUrl; 
+        image.id = "genomeLoading";
+        image.style.height= "200px";
+        image.style.width="auto";
+        image.style.display="block";
+        image.style.margin="auto";
+        
+        image.alt = "genome loading"; 
+        selectionOptions2.appendChild(image);
+
+        //need to send post request here. 
+        //const uuid = String(Math.floor(Math.random() * 100)+Math.floor(Math.random() * 100)+Math.floor(Math.random() * 100))
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        console.log(genomeList);
+        console.log(genomeSizeList);
+        // uuid = '1923'
+        const customData = {
+                pipeline,
+                genomeList,
+                cluster,
+                email,
+                genomeSizeList,
+                uuid,
+                accessionIDs
+        }; 
+        console.log("final data getting sent is ",customData);
+        fetch('', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json', 
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: JSON.stringify(customData),
+                })
+                .then(response => response.text())
+                .then(data => { })
+                .catch(error => {
+                console.error('Error:', error);
+                });
+                // processingGenome();
+                    checkFiles();
+    
+        event.preventDefault();
+
+};
+
 
 setInterval(checkFiles, 20000); // time in miliseconds, 10 seconds = 10000
 
@@ -400,6 +483,8 @@ async function showClusters(){
             autoSelectionBtn.style.backgroundColor = 'lightgray';
             autoSelectionBtn.disabled = true;
             autoSelectionBtn.classList.remove("hover-effect");
+            autoSelectionBtn.style.borderColor = "lightgray";
+            autoSelectionBtn.style.opacity = "60%";
         }
     })
 
@@ -728,6 +813,8 @@ selectionOptions1.addEventListener('click', (e) => {
     if(check === 'pipelineBtns') {
         pipeline = e.target.value; 
         e.target.style.backgroundColor = "lightgray";
+        e.target.style.borderColor = "lightgray";
+        e.target.style.opacity = "60%";
 
         const buttons = document.querySelectorAll("#selection-options1 .btn")
         buttons.forEach(function(button) {
@@ -743,7 +830,7 @@ selectionOptions1.addEventListener('click', (e) => {
                 genomeDiv.style.display = 'inline-block';
                 selectionHeading2.innerHTML ="2. Select Genomes";
                 
-                const genomeNames = ["TCRBOA1","TCRBOA1","TCRBOA1","TCRBOA1","TCRBOA1"];
+                const genomeNames = ["TCRBOA1","TCRBOA2","TCRBOA3","TCRBOA4","TCRBOA5"];
                 allGenomeSizes = ["3500000000","4500000000","4000000000","3900000000","3800000000"];
             
 
@@ -810,6 +897,12 @@ selectionOptions1.addEventListener('click', (e) => {
                     })
                     console.log("genomeList is ",genomeList);
                     console.log("size list is ", genomeSizeList);
+
+
+                    buttonWithId.style.backgroundColor = "lightgray";
+                    buttonWithId.style.borderColor = "lightgray";
+                    buttonWithId.style.opacity = "60%";
+
                     showClusters();
 
                 }
@@ -872,16 +965,13 @@ selectionOptions1.addEventListener('click', (e) => {
                 var button = createNextButton();
                 selectionOptions2.appendChild(button);
                 const buttonWithId = document.querySelector('#nxtBtn');
+                
+                var customLabel1 = document.createElement('label');
+                customLabel1.innerHTML = "or";
+                selectionOptions2.appendChild(customLabel1);
 
                 // Create container div
-                var containerDiv = document.createElement('div');
-
-                // Create label element
-                var customLabel2 = document.createElement('label');
-                customLabel2.innerHTML = 'or'; // Custom text
-                customLabel2.style.fontWeight = 'bold'; // Custom text
-                customLabel2.style.display = "inline-block";
-                
+                var containerDiv = document.createElement('div');          
                 
                 var customLabel2 = document.createElement('label');
                 customLabel2.innerHTML = 'Input Accession IDs'; // Custom text
@@ -900,7 +990,7 @@ selectionOptions1.addEventListener('click', (e) => {
              
                 containerDiv.appendChild(customLabel2);
                 containerDiv.appendChild(inputField);
-                containerDiv.style.marginTop = "50px";
+                containerDiv.style.marginTop = "10px";
                 containerDiv.style.paddingLeft = "50px";
 
                 selectionOptions2.appendChild(containerDiv);
@@ -931,6 +1021,8 @@ selectionOptions1.addEventListener('click', (e) => {
 
                     inputField.disabled = true; 
                     inputField.style.backgroundColor = "lightgray";
+                    inputField.style.borderColor = "lightgray";
+                    inputField.style.opacity = "60%";
 
                     const buttons = document.querySelectorAll("#selection-options1 .btn")
                     buttons.forEach(function(button) {
@@ -952,6 +1044,13 @@ selectionOptions1.addEventListener('click', (e) => {
 
                     console.log("GENOME LIST IS ", genomeList);
                     console.log("SIZE LIST IS ", genomeSizeList);
+
+
+                    buttonWithId.style.backgroundColor = "lightgray";
+                    buttonWithId.style.borderColor = "lightgray";
+                    buttonWithId.style.opacity = "60%";
+
+
                     showClusters();
                     }
                     else{
