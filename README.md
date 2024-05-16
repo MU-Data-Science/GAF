@@ -13,9 +13,13 @@
 1. Manas Das, Khawar Shehzad, Praveen Rao - **A Dataset of Network Traffic Collected During Large-Scale Human Genome Sequence Analysis.** IEEE DataPort, May 2023. [DOI](https://dx.doi.org/10.21227/y0t5-1w13)
 
 
-## FABRIC 
+## Resources
 
-Website: https://fabric-testbed.net/
+FABRIC: https://fabric-testbed.net/
+CloudLab: https://cloudlab.us
+
+For AVAH [CIKM '21], visit https://github.com/MU-Data-Science/EVA
+
 
 # Team
 Principal Investigator: Dr. Praveen Rao
