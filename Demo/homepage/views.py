@@ -34,10 +34,10 @@ def pipelinerun():
 
 
 
-def genomesAccessionDownload(accessionIDs):
+def genomesAccessionDownload(accessionIDs,cluster):
 
-    host = 'c220g5-111214.wisc.cloudlab.us' 
-    username = 'ks9dw'
+    host = 'c220g5-110932.wisc.cloudlab.us'  
+    username = 'shared'
     cmd = ""          
     ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
     
@@ -68,7 +68,7 @@ def genomesAccessionDownload(accessionIDs):
     print("output err from downloading is ",oerr)
     
     ##move them to /mydata/genomes/
-    cmd = "cp /mydata/NSF-CC-GAF/download_data/data/* /mydata/genomes"
+    cmd = "mv /mydata/NSF-CC-GAF/download_data/data/* /mydata/genomes"
     ssh_args[-1] = cmd 
     out = executeCommand(ssh_args)
     
@@ -174,8 +174,8 @@ def getSSH(cluster):
         ssh_args = ['ssh', '-F','/Users/khawar/.ssh/fabric_ssh_config','-i','/Users/khawar/.ssh/sliver',f'{username}@{host}',cmd]
     else:
         #print(cluster+' selected') 
-        host = 'c220g5-111214.wisc.cloudlab.us' 
-        username = 'ks9dw'
+        host = 'c220g5-110932.wisc.cloudlab.us'  
+        username = 'shared'
         cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
        
@@ -413,20 +413,21 @@ def execute_command_view(request):
     if request.method == 'POST':
         json_data = json.loads(request.body)
         pipeline = json_data.get('pipeline')
+        print("pipeline is ",pipeline)
         accessionIDs = json_data.get('accessionIDs')
         print("accession ids are ",accessionIDs)
-        email = json_data.get('email')
         uuid = json_data.get('uuid')
         uuid = uuid[:4]
-        
         cluster = json_data.get('cluster')
         print("cluster is ",cluster)
+        
+        #just to conform with previous code without email
+        email = ""
         
         if cluster == "auto":
             cluster = autoSelectCluster()
           
         ssh_args = getSSH(cluster)
-        print("ssh args are ",ssh_args)
         
         if pipeline == 'svc':
             downloadFileContent = json_data.get('fileContent')   
@@ -438,8 +439,7 @@ def execute_command_view(request):
             print('genome sizes are ',genomeSizes)
             
             ## user choose accession IDs 
-            if len(genomeList)<1:
-                        
+            if len(genomeList)<1: 
                accessionIDs = accessionIDs.split(",") 
                for i in range(len(accessionIDs)):
                    accessionIDs[i] = accessionIDs[i].strip 
@@ -451,7 +451,6 @@ def execute_command_view(request):
         genomeMain = "<<EOF\n"
         for size, genome in zip(genomeSizes,genomeList):
             genomeMain+= size+" "+genome+uuid+"\n"
-            
             #storing data in records
             data = {'uuid':uuid,'userName': email,'cluster':cluster,'genome':genome,'BAM':0,'BWAMarkDuplicates':0,'SortSam':0,'GATK_BQSR':0,'GATK_HaplotypeCaller':0,'vcf':0,'link':''}
             records.loc[len(records)] = data
@@ -548,29 +547,34 @@ def execute_command_view(request):
             cmd = "sudo tee -a /proj/eva-public-PG0/secondary.txt {}".format(genomeMain)
             ssh_args[-1] = cmd 
             out = executeCommand(ssh_args)
+            print("wriitng to secondary file :",out)
             
-            cmd = "cat /proj/eva-public-PG0/secondary.txt"
+            cmd = "sudo cat /proj/eva-public-PG0/secondary.txt"
             ssh_args[-1] = cmd
             out = executeCommand(ssh_args)
+            print("secondary file is :",out)
             
             
-            cmd = "cat /proj/eva-public-PG0/main.txt"
+            cmd = "sudo cat /proj/eva-public-PG0/main.txt"
             ssh_args[-1] = cmd
             out = executeCommand(ssh_args)
+            print("main file is :",out)
             
             
             #append to main file 
             cmd = "sudo cat /proj/eva-public-PG0/secondary.txt >> /proj/eva-public-PG0/main.txt"
             ssh_args[-1] = cmd 
             out = executeCommand(ssh_args)
+            print("append to main file is :",out)
             
-            cmd = "cat /proj/eva-public-PG0/main.txt"
+            cmd = "sudo cat /proj/eva-public-PG0/main.txt"
             ssh_args[-1] = cmd
             out = executeCommand(ssh_args)
+            print("main file after append is :",out)
             
             
             #empty secondary file 
-            cmd = 'sudo bash -c "> /proj/eva-public-PG0/secondary.txt"'
+            cmd = 'sudo sudo bash -c "> /proj/eva-public-PG0/secondary.txt"'
             ssh_args[-1] = cmd
             executeCommand(ssh_args)
             

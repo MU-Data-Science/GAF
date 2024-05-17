@@ -331,7 +331,6 @@ function submit() {
                 pipeline,
                 genomeList,
                 cluster,
-                email,
                 genomeSizeList,
                 uuid,
                 accessionIDs
@@ -612,7 +611,6 @@ function checkFiles(){
     const customData = {
             uuid,
             genomeList,
-            email, 
             vcfTotal
         };    
     fetch('/checkFiles/',{
