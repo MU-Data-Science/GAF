@@ -36,7 +36,7 @@ def pipelinerun():
 
 def genomesAccessionDownload(accessionIDs,cluster):
 
-    host = 'c220g5-110932.wisc.cloudlab.us'  
+    host = 'c220g1-031114.wisc.cloudlab.us'  
     username = 'shared'
     cmd = ""          
     ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
@@ -108,7 +108,7 @@ def getClusterUtilisations(request):
     
     return JsonResponse({'result':[1,2,3]})
     
-    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null','ks9dw@c220g5-111307.wisc.cloudlab.us','cat /etc/prometheus/utilization.json']
+    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null','c220g1-031114.wisc.cloudlab.us','cat /etc/prometheus/utilization.json']
     completed_process = subprocess.run(ssh_args,capture_output=True, text=True, check=True)
     output = completed_process.stdout
     utilisation = json.loads(output)
@@ -174,7 +174,7 @@ def getSSH(cluster):
         ssh_args = ['ssh', '-F','/Users/khawar/.ssh/fabric_ssh_config','-i','/Users/khawar/.ssh/sliver',f'{username}@{host}',cmd]
     else:
         #print(cluster+' selected') 
-        host = 'c220g5-110932.wisc.cloudlab.us'  
+        host = 'c220g1-031114.wisc.cloudlab.us'  
         username = 'shared'
         cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
@@ -212,12 +212,12 @@ def checkAvahRunning(ssh_args):
 logger = logging.getLogger(__name__)
 
 def cronFunc(): 
-    host = 'c240g5-110229.wisc.cloudlab.us'
-    username = 'ks9dw'        
+    host = 'c220g1-031114.wisc.cloudlab.us' 
+    username = 'shared'        
     
     #1- read all the logs and update record for stages 
     
-    cmd = '/users/ks9dw/cmd.sh'
+    cmd = '/users/shared/cmd.sh'
     ## cmd.sh is a bash file that contains the following 
     ## #!/usr/bin/env bash
     ## /mydata/Anaconda3/bin/python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py grep 16 "Completed" /mydata/hadoop/logs/userlogs/ | grep -o "Completed-[^/]*" | grep "ERR018538"
@@ -583,7 +583,7 @@ def execute_command_view(request):
             ssh_args[-1] = cmd 
             out = int(executeCommand(ssh_args))
             
-            if out > 17:
+            if out > 10:
                 print("got enough sequences to run job!")
                 # #empty main genome file 
                 # cmd = 'sudo bash -c "> /proj/eva-public-PG0/main.txt"'
@@ -639,8 +639,9 @@ def execute_command_view(request):
                 ## export SPARK_HOME="/mydata/spark"
                 cmd = '/users/ks9dw/AVAH/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 16 -b 2 -p 1 -P H -G'
                 cmd = '/users/ks9dw/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 8 -b 2 -p 15 -P H -G -g'
-                host = 'c240g5-110229.wisc.cloudlab.us' 
-                username = 'ks9dw'         
+                cmd = '/users/shared/GAF/FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'
+                host = 'c220g1-031114.wisc.cloudlab.us' 
+                username = 'shared'         
                 ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd] #f'export HADOOP_CONF_DIR=/mydata/hadoop/etc/hadoop && {cmd}'
                 ssh_args[-1] = cmd
                 command_string = ' '.join(ssh_args)
@@ -675,8 +676,8 @@ def checkFiles(request):
         email = json_data.get('email')
         vcfTotal = json_data.get('vcfTotal')
         
-        host = 'c240g5-110229.wisc.cloudlab.us' 
-        username = 'ks9dw'
+        host = 'c220g1-031114.wisc.cloudlab.us'  
+        username = 'shared'
     
         print(uuid, genomeList)
         
@@ -685,10 +686,10 @@ def checkFiles(request):
          
         #check the record csv and return matching rows            
         try:
-            mainRecord = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv')
+            mainRecord = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv') 
             print("all the record is ")
             print(mainRecord)
-            result = mainRecord.query("uuid == '{}'".format(uuid))
+            result = mainRecord.query("uuid == {}".format(uuid))
             #result = mainRecord.query("uuid == 1923")
             #print("result matching user request is ",result)
         except subprocess.CalledProcessError as e:

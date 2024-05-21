@@ -835,22 +835,45 @@ selectionOptions1.addEventListener('click', (e) => {
                 allGenomeSizes = ["3500000000","4500000000","4000000000","3900000000","3800000000"];
             
 
-                for (let i =0; i<genomeNames.length; i+=1){
+                for (let i =0; i<genomeNames.length; i+=2){
                     
+                    
+                    
+
                     ret = createGenomeButtons(genomeNames[i]);
+                    console.log( "i is ",i," ret is ",ret);
                     radioButton = ret[0];
                     label = ret[1];
                     label.style.marginRight = "15px";
-                    newLine = ret[2]; 
+                    //newLine = ret[2]; 
                     
                     selectionOptions2.style.textAlign = "center";
                     selectionOptions2.style.marginTop = "10px";
                     selectionOptions2.appendChild(radioButton);
                     selectionOptions2.appendChild(label);
-                    selectionOptions2.appendChild(newLine);
-                    console.log("an edit");
+                    //selectionOptions2.appendChild(newLine);
 
+
+
+                    ret = createGenomeButtons(genomeNames[i+1]);
+                    
+                    if(i+1<5){
+                    console.log( "i2 is ",i+1," ret is ",ret);
+                    radioButton = ret[0];
+                    label = ret[1];
+                    label.style.marginRight = "15px";
+                    selectionOptions2.style.textAlign = "center";
+                    selectionOptions2.style.marginTop = "10px";
+                    selectionOptions2.appendChild(radioButton);
+                    selectionOptions2.appendChild(label);
+                    newLine = ret[2];
+                    selectionOptions2.appendChild(newLine);
+                    }
                 }
+
+                //create dropdown 
+                
+
 
                 //create next button 
                 const button = document.createElement("button");
