@@ -1,6 +1,13 @@
 using pipenv for venv. 
 pipfile.lock contains the env details. 
 
+Here's how to use on new system/instance:
+1- install pipenv 
+2- cd to GAF/Demo 
+3- pipenv shell 
+4- pipenv install -r requirements.txt
+
+
 how to activate? cd to this directory and then `pipenv shell`
 link to yt : https://www.youtube.com/watch?v=rHux0gMZ3Eg&t=712s
 
