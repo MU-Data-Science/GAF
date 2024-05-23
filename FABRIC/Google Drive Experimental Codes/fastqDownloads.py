@@ -3,7 +3,7 @@ import re
 import subprocess
 
 #kill all screen sessions 
-#screen -ls | grep -o '^\s*[0-9]\+\.[^\t]*' | awk '{print $1}' | xargs -I{} screen -X -S {} quit m
+#screen -ls | grep -o '^\s*[0-9]\+\.[^\t]*' | awk '{print $1}' | xargs -I{} screen -X -S {} quit 
 
 #changing working directory with subprocess doesnt work 
 cmd = "cd /mydata"
