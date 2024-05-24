@@ -9,7 +9,7 @@ Steps given below assume you have access to FABRIC, are a part of GAF project an
 
   ![Screenshot 2023-11-29 at 11 26 48 AM](https://github.com/MU-Data-Science/GAF/assets/22073166/e0957486-8381-4197-ba52-42e145a51b23)
 
-3. Follow the steps 1 till 3 in the notebook. It is recommended to use step 2(b) over 2(a) to create the instance and submit the slice creation request, However you can use 2(a) as well. </br> 
+3. Follow the steps 1 till 3 in the notebook.</br> 
 Step one loades the Fablib library and list sites and their availability of GPUs, NICs and available CPU cores.  
   - Modify the instance worker configuration as needed e.g., `fabric.c24.m128.d500` will instantiate 24 core processor, 128GB ram and 500 gb storage. 
   - Choose a site location with GPUs one less than the combined total of RTX and T4 GPUs, matching the number of nodes. For instance, in an 8-node cluster, allocate 7 GPUs, with the master node wihtout a GPU.
