@@ -689,21 +689,12 @@ def checkFiles(request):
             mainRecord = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv') 
             print("all the record is ")
             print(mainRecord)
-            result = mainRecord.query("uuid == {}".format(uuid))
+            result = mainRecord.query("uuid == '{}'".format(uuid))
             #result = mainRecord.query("uuid == 1923")
             #print("result matching user request is ",result)
         except subprocess.CalledProcessError as e:
             print("Command returned non-zero exit status:", e.returncode) 
-            # #print("command is ",ssh_args)
-            # try:
-            #     result = subprocess.run(ssh_args,  shell=True, executable='/bin/bash', capture_output=True, text=True, check=True)
-            #     print(result.stdout)
-            # except subprocess.CalledProcessError as e:
-            #     print("Command returned non-zero exit status:", e.returncode)    
-
-            # return JsonResponse({'shareable_link': "False",'file_name':"fileName",'uuid':"uuid",'stop':False})
-            
-            # jsonRes = jsonify(result.to_json(orient='records'))            
+                     
         print("result is ",result)
         retRecord = result.to_json(orient='records')        
         #print("response to be sent is ",retRecord)
