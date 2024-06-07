@@ -12,6 +12,7 @@ from django.http import HttpResponse
 from flask import Flask, render_template, jsonify
 from django_lock import lock
 import sys 
+import re
 
 
 genomeName = ""
@@ -22,7 +23,7 @@ uuid = ""
 def pipelinerun():
     
     cmd = '/users/ks9dw/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 8 -b 2 -p 1 -P H -G -g'
-    cmd = '/users/ks9dw/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 8 -b 2 -p 1 -P H -G -g'
+    cmd = '/users/ks9dw/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 1 -P H -G -g'.format(cluster)
     host = 'c240g5-110229.wisc.cloudlab.us' 
     username = 'ks9dw'         
     ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd] 
@@ -103,78 +104,80 @@ def fileRenames():
 
 def getClusterUtilisations(request):
     
-    #json_data = json.loads(request.body)
-    #uuid = json_data.get('uuid')
-    
-    return JsonResponse({'result':[1,2,3]})
-    
-    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null','c220g1-031114.wisc.cloudlab.us','cat /etc/prometheus/utilization.json']
+    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null','shared@clnode223.clemson.cloudlab.us','cat /etc/prometheus/utilization.json']
     completed_process = subprocess.run(ssh_args,capture_output=True, text=True, check=True)
     output = completed_process.stdout
     utilisation = json.loads(output)
     cpu = utilisation["cpu"]  
-    cpu_cluster1 = cpu['clemDemo16']
-    cpu_cluster2 = cpu['wiscdemo8']
-    cpu_cluster3 = cpu['demo16Wisc']
-    cpu_cluster4 = cpu['gpu8']
-    print("utilisations are ",cpu_cluster1, cpu_cluster2,cpu_cluster3,cpu_cluster4)
+    cpu_cluster1 = cpu['demo1_cluster']
+    cpu_cluster2 = cpu['demo4_cluster']
+    cpu_cluster3 = cpu['demo_shared_cluster']
+    #cpu_cluster4 = cpu['gpu8']
+    print("utilisations are ",cpu_cluster1, cpu_cluster2,cpu_cluster3)
     
-    utis = [cpu_cluster1, cpu_cluster2,cpu_cluster3,cpu_cluster4]
+    utils = [cpu_cluster1, cpu_cluster2,cpu_cluster3]
     
     #utis = utis.to_json(orient='records')
     
-    utis = json.dumps(utis)
-    print('response being sent is ',utis)
+    utils = json.dumps(utils)
+    print('response being sent is ',utils)
     
-    return JsonResponse({'result':utis})
+    return JsonResponse({'result':utils})
 
 
 def autoSelectCluster():
+    
     cluster = ""
     
-    # ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null','ks9dw@c220g5-111307.wisc.cloudlab.us','cat /etc/prometheus/utilization.json']
-    # completed_process = subprocess.run(ssh_args,capture_output=True, text=True, check=True)
-    # output = completed_process.stdout
-    # utilisation = json.loads(output)
-    # cpu = utilisation["cpu"]  
-    # cpu_cluster1 = cpu['Cluster1']
-    # cpu_cluster2 = cpu['Cluster2']
-    # print("utilisations are ",cpu_cluster1, cpu_cluster2)
+    utilisations = getClusterUtilisations(1)
+    utilisations = utilisations.content.decode('utf-8')
+    utilisations = json.loads(utilisations)['result']
+    utilisations= re.sub(r'["\[\]]', '', utilisations)
+    utilisations = utilisations.split(',')
+
+    ssh_args = getSSH("cl1")
+    cmd = 'cat /proj/eva-public-PG0/cl1secondary.txt | wc -l'
+    ssh_args[-1] = cmd
+    jobQueueCluster1  = subprocess.run(ssh_args,capture_output=True, text=True, check=True).stdout
+    #print("queue length on cl1 ",float(jobQueueCluster1))
     
+
+    ssh_args = getSSH("cl3")
+    cmd = 'cat /proj/eva-public-PG0/cl3secondary.txt | wc -l'
+    ssh_args[-1] = cmd
+    jobQueueCluster2  = subprocess.run(ssh_args,capture_output=True, text=True, check=True).stdout
+    #print("queue length on cl2 ",float(jobQueueCluster1))
+        
+    res1 = 0.5 * float(utilisations[0]) + 0.5 * float(jobQueueCluster1)
+    res2 = 0.5 * float(utilisations[2]) + 0.5 * float(jobQueueCluster2)
     
-    # ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null','ks9dw@c220g5-111020.wisc.cloudlab.us','cat /proj/eva-public-PG0/secondary.txt | wc -l']
-    # jobQueueCluster1  = subprocess.run(ssh_args,capture_output=True, text=True, check=True).stdout
-    # print("queue length on cl1 ",float(jobQueueCluster1))
+    if res1 < res2:
+        cluster = "cl1" 
+    else:
+        cluster = "cl2" 
     
-    # ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null','ks9dw@clnode162.clemson.cloudlab.us','cat /proj/eva-public-PG0/secondary.txt | wc -l']
-    # jobQueueCluster2  = subprocess.run(ssh_args,capture_output=True, text=True, check=True).stdout
-    # print("queue length on cl2 ",float(jobQueueCluster2))
-    
-    # print("type of cpu_clust is",type(float(cpu_cluster1)))
-    
-    # res1 = 0.5 * float(cpu_cluster1) + 0.5 * jobQueueCluster1 
-    # res2 = 0.5 * float(cpu_cluster2) + 0.5 * jobQueueCluster2 
-    
-    # if res1 < res2:
-    #     cluster = "1" 
-    # else:
-    #     cluster = "2" 
-    
-    # print("auto selected clsuter is ",cluster)
+    print("auto selected cluster is ",cluster)
     return cluster 
 
 def getSSH(cluster):
     
     cmd = ''
-    cluster = "cloudlab"
-    if cluster == "Fabric":
-        #print(cluster+' selected') 
-        host = '2001:1948:417:7:f816:3eff:fea9:faff' 
-        username = 'ubuntu'
-        ssh_args = ['ssh', '-F','/Users/khawar/.ssh/fabric_ssh_config','-i','/Users/khawar/.ssh/sliver',f'{username}@{host}',cmd]
-    else:
-        #print(cluster+' selected') 
+    #cluster = "cloudlab"
+    if cluster == "cl1":
+        #8node cluster, demo-1
         host = 'c220g1-031114.wisc.cloudlab.us'  
+        username = 'shared'
+        cmd = ""          
+        ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
+    elif cluster == "cl2": 
+        #8 node cluster, demo-4
+        host = 'c220g5-110912.wisc.cloudlab.us'  
+        username = 'shared'
+        cmd = ""          
+        ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
+    elif cluster == "cl3": 
+        #16 node cluster, shared
+        host = 'clnode189.clemson.cloudlab.us'  
         username = 'shared'
         cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
@@ -218,7 +221,8 @@ def cronFunc():
     #1- read all the logs and update record for stages 
     
     cmd = '/users/shared/cmd.sh'
-    ## cmd.sh is a bash file that contains the following 
+    ## cmd.sh is a bash file
+    # that contains the following 
     ## #!/usr/bin/env bash
     ## /mydata/Anaconda3/bin/python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py grep 16 "Completed" /mydata/hadoop/logs/userlogs/ | grep -o "Completed-[^/]*" | grep "ERR018538"
     ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
@@ -286,8 +290,7 @@ def cronFunc():
       
 
 def checkVCF(): 
-        
-        username_host = 'ks9dw@c240g5-110229.wisc.cloudlab.us' 
+        username_host = 'shared@c220g1-031114.wisc.cloudlab.us' 
         
         #check if vcf is present
         cmd = '/mydata/hadoop/bin/hdfs dfs -test -e /ERR*.vcf && echo "1" || echo "0"'
@@ -315,6 +318,12 @@ def checkVCF():
                     ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',username_host,cmd]
                     command_string = ' '.join(ssh_args)
                     ret = subprocess.run(command_string, shell=True, executable='/bin/bash', capture_output=True, text=True, check=True)
+                    
+                    print("copying for vcf-post process : ",vcf)
+                    cmd = 'cp /mydata/{} /mydata/NSF-CC-GAF/post-vcf-pipeline/data/'.format(vcf)
+                    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',username_host,cmd]
+                    command_string = ' '.join(ssh_args)
+                    ret = subprocess.run(command_string, shell=True, executable='/bin/bash', capture_output=True, text=True, check=True)
 
                     print("copying to server : ",vcf)
                     cmd = "scp {}:/mydata/{} /home/ubuntu/GAF/Demo/homepage".format(username_host,vcf)
@@ -328,35 +337,33 @@ def checkVCF():
                         print("drive link here is ",driveLink)
                         driveLink = driveLink.stdout.strip()
                         print("shareable link is ",driveLink)   
-                    except subprocess.CalledProcessError as e: 
-                        print('failed to upload, error is ',e.stderr)
                             
                     
-                    print("updating link : ",vcf)         
-                    records = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv')
-                    vcfGenome = vcf.split('.')[0]
-                    uuid = vcfGenome[-4:] 
-                    genome = vcfGenome[:-4] 
-                    loc = records[(records['genome'] == genome) & (records['uuid'] == uuid)].index[0]
+                        print("updating link : ",vcf)         
+                        records = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv')
+                        vcfGenome = vcf.split('.')[0]
+                        uuid = vcfGenome[-4:] 
+                        genome = vcfGenome[:-4] 
+                        loc = records[(records['genome'] == genome) & (records['uuid'] == uuid)].index[0]
+                        
+                        records.loc[loc,'link'] = driveLink
+                        records.loc[loc,'vcf'] = 1
+                        records.to_csv('/home/ubuntu/GAF/Demo/homepage/records.csv',index = False)    
+                        
+                        
+                        print("deleting from mydata ", vcf) 
+                        cmd = 'rm /mydata/{}'.format(vcf)
+                        ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',username_host,cmd]
+                        command_string = ' '.join(ssh_args)
+                        ret = subprocess.run(command_string, shell=True, executable='/bin/bash', capture_output=True, text=True, check=True)
+                        
+                        print("deleting from django server ", vcf)
+                        cmd = "rm /home/ubuntu/GAF/Demo/homepage/{}".format(vcf)
+                        ret = subprocess.run(cmd, shell = True, capture_output= True, text= True)
+                        
+                        
+                        print("deleting from hdfs : ",vcf)
                     
-                    records.loc[loc,'link'] = driveLink
-                    records.loc[loc,'vcf'] = 1
-                    records.to_csv('/home/ubuntu/GAF/Demo/homepage/records.csv',index = False)    
-                    
-                    
-                    print("deleting from mydata ", vcf) 
-                    cmd = 'rm /mydata/{}'.format(vcf)
-                    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',username_host,cmd]
-                    command_string = ' '.join(ssh_args)
-                    ret = subprocess.run(command_string, shell=True, executable='/bin/bash', capture_output=True, text=True, check=True)
-                    
-                    print("deleting from django server ", vcf)
-                    cmd = "rm /home/ubuntu/GAF/Demo/homepage/{}".format(vcf)
-                    ret = subprocess.run(cmd, shell = True, capture_output= True, text= True)
-                       
-                       
-                    print("deleting from hdfs : ",vcf)
-                    try:
                         cmd = '/mydata/hadoop/bin/hdfs dfs -rm /{}'.format(vcf)
                         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',username_host,cmd]
                         command_string = ' '.join(ssh_args)
@@ -369,10 +376,47 @@ def checkVCF():
                 except subprocess.CalledProcessError as e: 
                     print(f"Command failed with a non-zero exit status. Error: {e}")
                     print(e.stderr)          
-        
+                
         else:
             print("vcfs not generated yet")
             
+    
+        
+@lock("global")
+def processPhyloTree(request):
+    json_data = json.loads(request.body)
+    uuid = json_data.get('uuid')
+    uuid = uuid[:4]
+    genomeList = json_data.get('genomeList')
+    cluster = json_data.get('cluster')
+    
+def processPhyloTree():
+    
+    genomeListSize = 5
+    cluster = 1
+
+    ssh_args = getSSH(cluster)
+    cmd = 'ls /mydata/NSF-CC-GAF/post-vcf-pipeline/data/*vcf | wc -l'    
+    ssh_args[-1] = cmd
+    command_string = ' '.join(ssh_args)
+    ret = subprocess.run(command_string, capture_output=True,shell = True,executable='/bin/bash',text=True,check=True) #executable='/bin/bash'
+    ret = ret.stdout
+
+    print("command output is ",ret)
+    
+    if int(ret) == genomeListSize:
+        #print("fetching phylogeny tree")
+       #cmd = "scp {}:/mydata/{} /home/ubuntu/GAF/Demo/homepage".format(username_host,vcf)
+        #result = subprocess.run(cmd, capture_output=True, text=True, check=True, shell = True) 
+        cmd = "/bin/bash /mydata/NSF-CC-GAF/post-vcf-pipeline/execute.sh"
+        ssh_args[-1] = cmd
+        command_string = ' '.join(ssh_args)
+        ret = subprocess.run(command_string, capture_output=True,shell = True,executable='/bin/bash',text=True,check=True) 
+        ret = ret.stdout 
+        print("execute bash output is ",ret)
+        ret = ret.stderr 
+        print("execute bash error is ",ret)
+        
         
 
 def run_single_node():
@@ -426,8 +470,10 @@ def execute_command_view(request):
         
         if cluster == "auto":
             cluster = autoSelectCluster()
+            print("auto cluster selection results is : ",cluster)
           
         ssh_args = getSSH(cluster)
+        print("ssh_args are : ",ssh_args)
         
         if pipeline == 'svc':
             downloadFileContent = json_data.get('fileContent')   
@@ -473,7 +519,9 @@ def execute_command_view(request):
         ssh_args[-1] = cmd  
         ret = checkAvahRunning(ssh_args)
         print("check avah running output is ",ret)
-           
+    
+            
+    
         if ret.find("true") != -1:
             print("pipeline is running")
             pass
@@ -544,45 +592,49 @@ def execute_command_view(request):
             print("pipeline not runnning so here we are!")
 
             #write to secondary file
-            cmd = "sudo tee -a /proj/eva-public-PG0/secondary.txt {}".format(genomeMain)
+            cmd = "sudo tee -a /proj/eva-public-PG0/{}secondary.txt {}".format(cluster,genomeMain)
             ssh_args[-1] = cmd 
             out = executeCommand(ssh_args)
-            print("wriitng to secondary file :",out)
+            print("writng to secondary file :",out)
             
-            cmd = "sudo cat /proj/eva-public-PG0/secondary.txt"
+            cmd = "sudo cat /proj/eva-public-PG0/{}secondary.txt".format(cluster)
             ssh_args[-1] = cmd
             out = executeCommand(ssh_args)
             print("secondary file is :",out)
             
-            
-            cmd = "sudo cat /proj/eva-public-PG0/main.txt"
+            #old main is
+            cmd = "sudo cat /proj/eva-public-PG0/{}main.txt".format(cluster)
+            print(" main view command is ",cmd)
             ssh_args[-1] = cmd
             out = executeCommand(ssh_args)
             print("main file is :",out)
             
             
             #append to main file 
-            cmd = "sudo cat /proj/eva-public-PG0/secondary.txt >> /proj/eva-public-PG0/main.txt"
+            cmd = "sudo cat /proj/eva-public-PG0/{}secondary.txt >> /proj/eva-public-PG0/{}main.txt".format(cluster,cluster)
+            print(" main append command is ",cmd)
             ssh_args[-1] = cmd 
             out = executeCommand(ssh_args)
             print("append to main file is :",out)
             
-            cmd = "sudo cat /proj/eva-public-PG0/main.txt"
+            cmd = "sudo cat /proj/eva-public-PG0/{}main.txt".format(cluster)
             ssh_args[-1] = cmd
             out = executeCommand(ssh_args)
             print("main file after append is :",out)
             
             
             #empty secondary file 
-            cmd = 'sudo sudo bash -c "> /proj/eva-public-PG0/secondary.txt"'
+            cmd = 'sudo sudo bash -c "> /proj/eva-public-PG0/{}secondary.txt"'.format(cluster)
             ssh_args[-1] = cmd
             executeCommand(ssh_args)
             
             #check main file length (start job when we have 30 genomes job in queue)
-            cmd = "sudo cat /proj/eva-public-PG0/main.txt | wc -l"
+            cmd = "sudo cat /proj/eva-public-PG0/{}main.txt | wc -l".format(cluster)
             ssh_args[-1] = cmd 
             out = int(executeCommand(ssh_args))
             
+            print("exiting the function forcefully")
+            return
             if out > 10:
                 print("got enough sequences to run job!")
                 # #empty main genome file 
@@ -590,7 +642,7 @@ def execute_command_view(request):
                 # ssh_args[-1] = cmd
                 # #executeCommand(ssh_args)
 
-                cmd = "cat /proj/eva-public-PG0/main.txt"
+                cmd = "cat /proj/eva-public-PG0/{}main.txt".format(cluster)
                 ssh_args[-1] = cmd
                 names = executeCommand(ssh_args)
                 splits = list(names.split())
@@ -633,16 +685,17 @@ def execute_command_view(request):
         
                 
                 #run pipeline 
+                
                 ## modify the run_variant_analysis_scale.sh 
                 ## export HADOOP_HOME="/mydata/hadoop"
                 ## export HADOOP_CONF_DIR="/mydata/hadoop/etc/hadoop"
                 ## export SPARK_HOME="/mydata/spark"
+                ## provide completet path for /mydata/spark/bin/spark-submit
                 cmd = '/users/ks9dw/AVAH/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 16 -b 2 -p 1 -P H -G'
-                cmd = '/users/ks9dw/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 8 -b 2 -p 15 -P H -G -g'
-                cmd = '/users/shared/GAF/FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'
+                cmd = '/users/shared/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
                 host = 'c220g1-031114.wisc.cloudlab.us' 
                 username = 'shared'         
-                ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd] #f'export HADOOP_CONF_DIR=/mydata/hadoop/etc/hadoop && {cmd}'
+                ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd] 
                 ssh_args[-1] = cmd
                 command_string = ' '.join(ssh_args)
                 
@@ -676,9 +729,6 @@ def checkFiles(request):
         email = json_data.get('email')
         vcfTotal = json_data.get('vcfTotal')
         
-        host = 'c220g1-031114.wisc.cloudlab.us'  
-        username = 'shared'
-    
         print(uuid, genomeList)
         
         retRecord = pd.DataFrame(columns=['uuid','userName','cluster','genome','BAM','BWAMarkDuplicates','SortSam','GATK_BQSR','GATK_HaplotypeCaller','vcf','link'])
@@ -687,11 +737,10 @@ def checkFiles(request):
         #check the record csv and return matching rows            
         try:
             mainRecord = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv') 
+            #mainRecord = pd.read_csv('/users/shared/GAF/Demo/homepage/records.csv')
             print("all the record is ")
             print(mainRecord)
             result = mainRecord.query("uuid == '{}'".format(uuid))
-            #result = mainRecord.query("uuid == 1923")
-            #print("result matching user request is ",result)
         except subprocess.CalledProcessError as e:
             print("Command returned non-zero exit status:", e.returncode) 
                      

@@ -10,7 +10,9 @@ def checkFiles():
         cronFunc()
         print("going to sleep")
         print()
-        time.sleep(80)
+        time.sleep(100)
+        
+    
         
     except subprocess.CalledProcessError as e:
         print("Command returned non-zero exit status:", e.returncode)

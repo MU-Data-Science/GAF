@@ -216,7 +216,7 @@ function submitWithEmailUsername() {
             
             //change heading nad empty the content of div 
             selectionHeading2.textContent = "5. Processing Genome. Cluster ("+cluster.charAt(2)+")";
-            selectionHeading2.textContent = "5. Processing Genome. Cluster (1)";
+            selectionHeading2.textContent = "5. Processing Genome. Cluster (2)";
             while(selectionOptions2.firstChild){
                 selectionOptions2.removeChild(selectionOptions2.firstChild);
             }
@@ -303,7 +303,7 @@ function submit() {
       });
 
         selectionHeading2.textContent = "4. Processing Genome. Cluster ("+cluster.charAt(2)+")";
-        selectionHeading2.textContent = "4. Processing Genome. Cluster (1)";
+        selectionHeading2.textContent = "4. Processing Genome. Cluster (2)";
         while(selectionOptions2.firstChild){
             selectionOptions2.removeChild(selectionOptions2.firstChild);
         }
@@ -357,7 +357,7 @@ function submit() {
 };
 
 
-setInterval(checkFiles, 20000); // time in miliseconds, 10 seconds = 10000
+setInterval(checkFiles, 10000); // time in miliseconds, 10 seconds = 10000
 
 async function showClusters(){
 
@@ -367,36 +367,33 @@ async function showClusters(){
     selectionHeading3.innerHTML ="3. Choose Cluster";
     var i = 1 ;
     var i = 0 ;
-    clusterUsages = [10,88,76]
+    //clusterUsages = [81,33,2]
     
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    // var clusterUsages = []; 
+    
+    var clusterUsages = []; 
 
-
-    //cluterUtilisation progress bars
-    // try {
-    //     pass 
-    //     const response = await fetch('/getClusterUtilisations/',{
-    //         method: 'GET',
-    //         headers: {
-    //             'Content-Type': 'application/json', 
-    //             'X-CSRFToken': csrftoken,
-    //         },
-    //     }) 
+    //fetch cluster utilisations
+    try { 
+        const response = await fetch('/getClusterUtilisations/',{
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json', 
+                'X-CSRFToken': csrftoken,
+            },
+        }) 
         
-    //     const data = await response.json();
-    //     const result = JSON.parse(data.result); 
-    //     console.log("resut is ",result);
-    //     clusterUsages = clusterUsages.concat(result); 
-    //     console.log("clus usages inside = ",clusterUsages)
+        const data = await response.json();
+        const result = JSON.parse(data.result); 
+        clusterUsages = clusterUsages.concat(result); 
+        console.log("clus usages inside = ",clusterUsages)
  
-    // }
-    // catch (error) {
-    //     console.error('Error fetching data:', error);
-    // }
+    }
+    catch (error) {
+        console.error('Error fetching data:', error);
+    }
     
     
-
     clusters.options.forEach(options => {
         const radioButton = document.createElement("INPUT");
         radioButton.type = "radio";
@@ -499,6 +496,7 @@ async function showClusters(){
         if(cluster){
             event.preventDefault();
             buttonWithId.style.backgroundColor = "lightgray";
+            console.log("cluster selected is : ",cluster);
             submit();
         }
         else{
@@ -509,6 +507,7 @@ async function showClusters(){
 
     autoSelectionBtn.addEventListener('click', function() {
         cluster = "auto";
+        console.log("auto cluster selection pressed, cluster value is : ",cluster)
         submit(); 
     });
 }
@@ -557,6 +556,7 @@ function displayPhyloTree(){
     while(selectionOptions3.firstChild){
         selectionOptions3.removeChild(selectionOptions3.firstChild);
     }
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     selectionHeading3.style.display = 'none';
     clusterDiv.style.visibility = 'visible';
 
@@ -571,20 +571,47 @@ function displayPhyloTree(){
     animationImg.style.width = "400px";
     animationImg.src = animationPath;
 
+    // const customData = {
+    //     pipeline,
+    //     genomeList,
+    //     cluster,
+    //     email,
+    //     genomeSizeList,
+    //     uuid,
+    //     accessionIDs
+    //     }; 
+    //     console.log("data sent for phylotree is ",customData);
+    //     fetch('', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json', 
+    //             'X-CSRFToken': csrftoken,
+    //         },
+    //         body: JSON.stringify(customData),
+    //     })
+    //     .then(response => response.text())
+    //     .then(data => { })
+    //     .catch(error => {
+    //     console.error('Error:', error);
+    //     });
+    //      processPhyloTree();
+    //     event.preventDefault();
 
-    //newWindow.document.body.appendChild(animationImg);
     newWindow.document.body.appendChild(imgDiv);
     imgDiv.appendChild(animationImg);
 
     setTimeout(function() {
         console.log("im inside the timeout");
         var treeImg = document.createElement('img');
-        var treeImgPath = "/static/images/phylogeny.jpeg"; 
+        var treeImgPath = "/static/images/phylogeny.png"; 
         treeImg.src = treeImgPath;
+        treeImg.style.width = '1000px';
+        treeImg.style.height = '1000px';
 
         imgDiv.style.position = '';
         imgDiv.style.left = '';
         imgDiv.style.top = '';
+        
  
         imgDiv.removeChild(animationImg);
         imgDiv.appendChild(treeImg);
@@ -595,11 +622,8 @@ function displayPhyloTree(){
 
     //newWindow.document.body.appendChild(treeImg);
     //clusterDiv.appendChild(treeImg);
-}
 
-function showImage(){
-
-}
+}//end func
 
 
 function checkFiles(){
