@@ -455,7 +455,7 @@ async function showClusters(){
 
     const resourceAvlb = document.getElementById('resourceAvlb');
     resourceAvlb.addEventListener('click', function(event) { 
-            const externalURL = 'http://c220g5-111307.wisc.cloudlab.us:3000/d/fdafc397-6177-4291-86d0-73abf671501000/clustermetricsdemo?orgId=1&refresh=5s'; 
+            const externalURL = 'http://clnode221.clemson.cloudlab.us:3000/d/fdafc397-6177-4291-86d0-73abf671501/all-clusters-overview?orgId=1&refresh=5s'; 
             window.open(externalURL, '_blank');
             event.preventDefault();
     });

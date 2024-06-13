@@ -104,14 +104,14 @@ def fileRenames():
 
 def getClusterUtilisations(request):
     
-    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null','shared@clnode223.clemson.cloudlab.us','cat /etc/prometheus/utilization.json']
+    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null','shared@clnode221.clemson.cloudlab.us','cat /etc/prometheus/utilization.json']
     completed_process = subprocess.run(ssh_args,capture_output=True, text=True, check=True)
     output = completed_process.stdout
     utilisation = json.loads(output)
     cpu = utilisation["cpu"]  
-    cpu_cluster1 = cpu['demo1_cluster']
-    cpu_cluster2 = cpu['demo4_cluster']
-    cpu_cluster3 = cpu['demo_shared_cluster']
+    cpu_cluster1 = cpu['demo-1']
+    cpu_cluster2 = cpu['demo-2']
+    cpu_cluster3 = cpu['demo-3']
     #cpu_cluster4 = cpu['gpu8']
     print("utilisations are ",cpu_cluster1, cpu_cluster2,cpu_cluster3)
     
@@ -164,20 +164,20 @@ def getSSH(cluster):
     cmd = ''
     #cluster = "cloudlab"
     if cluster == "cl1":
-        #8node cluster, demo-1
-        host = 'c220g1-031114.wisc.cloudlab.us'  
+        #demo1
+        host = 'clnode030.clemson.cloudlab.us' 
         username = 'shared'
         cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
     elif cluster == "cl2": 
-        #8 node cluster, demo-4
-        host = 'c220g5-110912.wisc.cloudlab.us'  
+        #demo2
+        host = 'clnode029.clemson.cloudlab.us'  
         username = 'shared'
         cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
-    elif cluster == "cl3": 
-        #16 node cluster, shared
-        host = 'clnode189.clemson.cloudlab.us'  
+    elif cluster == "cl3":  
+        #demo3
+        host = 'clnode051.clemson.cloudlab.us'
         username = 'shared'
         cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
@@ -472,6 +472,11 @@ def execute_command_view(request):
             cluster = autoSelectCluster()
             print("auto cluster selection results is : ",cluster)
           
+        
+        if pipeline == "svc":
+            print("somatic pipeline choosen, cluster selected is : cl3")
+            cluster = "cl3"
+            
         ssh_args = getSSH(cluster)
         print("ssh_args are : ",ssh_args)
         
