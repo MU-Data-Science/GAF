@@ -2,8 +2,8 @@
 
 
 # Publications
-1. Praveen Rao, Khawar Shehzad - **A Technique for Secure Variant Calling on Human Genome Sequences Using SmartNICs.** In 17th IEEE International Conference on Cloud Computing (CLOUD 2024), 8 pages, Shehzhen, China, 2024. (to appear) [[PDF]](https://drive.google.com/file/d/1CfRMN9ErRL9XBMcKQ9UKAV8EhED7x17-/view?usp=sharing)
-2. Manas Jyoti Das, Khawar Shehzad, Praveen Rao - **Efficient Variant Calling on Human Genome Sequences Using a GPU-Enabled Commodity Cluster.** In 32nd ACM International Conference on Information and Knowledge Management (CIKM 2023), 6 pages, Birmingham, UK, 2023. [[PDF]](https://drive.google.com/file/d/1N2qXUoX1L9zkZXg_ET1VGLfezXmgSsR9/view) [[DOI]](https://doi.org/10.1145/3583780.3615268)
+1. Praveen Rao, Khawar Shehzad - **A Technique for Secure Variant Calling on Human Genome Sequences Using SmartNICs.** In 17th IEEE International Conference on Cloud Computing (CLOUD 2024), 8 pages, Shehzhen, China, 2024. [[PDF]](https://drive.google.com/file/d/1CfRMN9ErRL9XBMcKQ9UKAV8EhED7x17-/view?usp=sharing) [[Slides]](https://drive.google.com/file/d/1TZySZN3wf6pBCeLQvXc8rIwFjH4DYexM/view?usp=sharing)
+2. Manas Jyoti Das, Khawar Shehzad, Praveen Rao - **Efficient Variant Calling on Human Genome Sequences Using a GPU-Enabled Commodity Cluster.** In 32nd ACM International Conference on Information and Knowledge Management (CIKM 2023), 6 pages, Birmingham, UK, 2023. [[PDF]](https://drive.google.com/file/d/1N2qXUoX1L9zkZXg_ET1VGLfezXmgSsR9/view) [[DOI]](https://doi.org/10.1145/3583780.3615268) [[Poster]](https://drive.google.com/file/d/1V1FnvIn_TeK1LpueNcAH6w9CNH6OYy1I/view?usp=sharing)
 3. Andrew Rommitti, Jiya Shetty, Praveen Rao - **Evaluating the Effectiveness of Synthetic Datasets for Dementia Diagnosis Using Deep Learning.** In 52nd IEEE Applied Imagery and Pattern Recognition Workshop (AIPR), 5 pages, St. Louis, 2023. [[PDF]](https://drive.google.com/file/d/1arURsrY5zBKUTHgMxf-HyXN-mgp8uprU/view)
 
 # Tutorial
