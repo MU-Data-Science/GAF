@@ -1,7 +1,7 @@
 # HeDAI 2024 Tutorial
 ## Advanced Cyberinfrastructure for Large-Scale Health Data Analysis
 
-Here are the [tutorial slides](HeDAI-2024-Praveen-Rao-tutorial.pdf) presented at the [HeDAI 2024](https://sites.google.com/view/hedai2024) Workshop (co-located with [EDBT/ICDT 2024](https://dastlab.github.io/edbticdt2024/)).
+Here are the [tutorial slides](https://drive.google.com/file/d/1wiAZHboUWxXR7gBSBpsG1Zw9q48yjXDN/view?usp=sharing) presented at the [HeDAI 2024](https://sites.google.com/view/hedai2024) Workshop (co-located with [EDBT/ICDT 2024](https://dastlab.github.io/edbticdt2024/)).
 
 ## Setup
 1. Create a slice/experiment on FABRIC by using the SliceBuilder; select Ubuntu 20.04.
