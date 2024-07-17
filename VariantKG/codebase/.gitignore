@@ -6,9 +6,6 @@ __pycache__/
 *$py.class
 *.log
 MODEL-*/*
-snpEff/*
-snpEff_genes.txt
-snpEff_summary.html
 blazegraph.*
 Uploads/*
 *.json
