@@ -9,6 +9,8 @@ A Scalable Tool for Analyzing Genomic Variants of Humans Using Knowledge Graphs 
 
 [Running VariantKG](#run-variantKG)
 
+[Contributions] (#contributions-variantKG)
+
 # Installing SnpEff
 The tool is already packaged with the latest version (as of July 17, 2024) of SnpEff. If you wish to upgrade or face an error with the GRCh version being unavailable, use the following steps.
 
@@ -86,3 +88,7 @@ Open your browser (Safari or Chrome), and type the following:
 If your system's default setting is in dark mode and you prefer a light mode for the tool, use the following URL:
 
     127.1.1.1:7865/?__theme=light
+
+# Contributions
+
+Ph.D. Students: Shivika Prasanna, Ajay Kumar
