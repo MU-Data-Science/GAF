@@ -1,0 +1,16 @@
+# This is a "service unit file" for the systemd init system to launch
+# 'sg-web'.  Drop it in /etc/systemd/system or similar to have
+# 'sg-web' automatically started.
+
+[Unit]
+Description=SPARQLing-genomics web interface
+
+[Service]
+ExecStart=@prefix@/bin/sg-web --configuration-file=@webconfdir@/sg-web.xml
+Environment=LC_ALL=en_US.utf8
+RemainAfterExit=yes
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target

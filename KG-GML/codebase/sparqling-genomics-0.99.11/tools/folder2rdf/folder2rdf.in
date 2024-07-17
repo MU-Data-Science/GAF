@@ -1,0 +1,299 @@
+#!@GUILE@ --no-auto-compile
+-*- scheme -*-
+!#
+;;; Copyright © 2018  Roel Janssen <roel@gnu.org>
+;;;
+;;; This program is free software: you can redistribute it and/or
+;;; modify it under the terms of the GNU General Public License as
+;;; published by the Free Software Foundation, either version 3 of
+;;; the License, or (at your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;; General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(use-modules (ice-9 ftw)
+             (ice-9 getopt-long)
+             (ice-9 match)
+             (ice-9 popen)
+             (ice-9 rdelim)
+             (ice-9 threads)
+             (ice-9 textual-ports)
+             (srfi srfi-1))
+
+;; ---------------------------------------------------------------------------
+;; COMMAND-LINE PARSING
+;; ---------------------------------------------------------------------------
+;;
+;; The following section handles command-line arguments.
+;;
+
+(define program-options
+  '((version             (single-char #\v) (value #f))
+    (help                (single-char #\h) (value #f))
+    (metadata-only       (single-char #\m) (value #f))
+    (recursively         (single-char #\r) (value #f))
+    (compress            (single-char #\c) (value #f))
+    (project-name        (single-char #\p) (value #t))
+    (threads             (single-char #\t) (value #t))
+    (input-directory     (single-char #\i) (value #t))
+    (output-directory    (single-char #\o) (value #t))))
+
+(define (show-help)
+  (for-each (lambda (line) (display line) (newline))
+   '("This is folder2rdf."
+     "  --compress             -c  Compress the output files using 'gzip'."
+     "                             Make sure gzip is in PATH."
+     "  --help                 -h  Show this message."
+     "  --input-directory=ARG  -i  Directory to scan for files. [default=.]"
+     "  --metadata-only        -m  Only obtain metadata."
+     "  --output-directory=ARG -o  Directory to store converted data."
+     "  --project-name         -p  The name of the project."
+     "  --recursively          -r  Also look in subdirectories."
+     "  --threads              -t  Number of threads to use. [default=1]"
+     "  --version              -v  Show versioning information."))
+  (exit 0))
+
+(define (show-version)
+  (display "sparqling-genomics @VERSION@")
+  (newline)
+  (exit 0))
+
+(define %config (getopt-long (command-line) program-options))
+
+(when (assoc-ref %config 'help)    (show-help))
+(when (assoc-ref %config 'version) (show-version))
+
+;; Set the default value for ‘input-directory’.
+(unless (assoc-ref %config 'input-directory)
+  (set! %config (cons `(input-directory . ,(getcwd)) %config)))
+
+(unless (assoc-ref %config 'threads)
+  (set! %config (cons '(threads . "1") %config)))
+
+(unless (assoc-ref %config 'output-directory)
+  (format #t "Missing required argument --output-directory.~%")
+  (exit 0))
+
+(unless (assoc-ref %config 'project-name)
+  (format #t "Missing required argument --project-name.~%")
+  (exit 0))
+
+(define scan-recursively? (assoc-ref %config 'recursively))
+(define metadata-only?    (assoc-ref %config 'metadata-only))
+(define compress?         (assoc-ref %config 'compress))
+(define threads           (assoc-ref %config 'threads))
+(define input-directory   (assoc-ref %config 'input-directory))
+(define output-directory  (assoc-ref %config 'output-directory))
+(define project           (assoc-ref %config 'project-name))
+(define project-file      (string-append output-directory "/" project ".n3"))
+
+;; ---------------------------------------------------------------------------
+;; UTILITY FUNCTIONS
+;; ---------------------------------------------------------------------------
+;;
+;; The following section defines utility functions.
+;;
+
+(define (mkdir-p dir)
+  "Create directory DIR and all its ancestors."
+  (define absolute?
+    (string-prefix? "/" dir))
+
+  (define not-slash
+    (char-set-complement (char-set #\/)))
+
+  (let loop ((components (string-tokenize dir not-slash))
+             (root       (if absolute?
+                             ""
+                             ".")))
+    (match components
+      ((head tail ...)
+       (let ((path (string-append root "/" head)))
+         (catch 'system-error
+           (lambda ()
+             (mkdir path)
+             (loop tail path))
+           (lambda args
+             (if (= EEXIST (system-error-errno args))
+                 (loop tail path)
+                 (apply throw args))))))
+      (() #t))))
+
+;; ---------------------------------------------------------------------------
+;; MD5 HASHING FUNCTIONS
+;; ---------------------------------------------------------------------------
+;;
+;; The following section implements a MD5 hashing function by using the
+;; external 'md5sum' program.
+;;
+
+(define (file->md5-sum file-name)
+  (let* ((port   (open-pipe* OPEN_READ "md5sum" "--" file-name))
+         (result (read-delimited " " port)))
+    (close-pipe port)
+    result))
+
+;; ---------------------------------------------------------------------------
+;; RDF PRODUCERS
+;; ---------------------------------------------------------------------------
+;;
+;; The following section defines functions that will add extra triples.
+;;
+
+(define (add-ownership-info project filename fs-stat)
+  (let ((port        (open-file project-file "a"))
+        (origin-hash (file->md5-sum filename)))
+    (setvbuf port 'block (expt 2 24)) ; Increase the write throughput.
+    (catch #t
+      (lambda _
+        (let ((owner-name (passwd:name (getpwuid (stat:uid fs-stat))))
+              (file-size (stat:size fs-stat)))
+          (format port "<http://sparqling-genomics/User/~a> <~a> <~a> .~%"
+                  owner-name
+                  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                  "http://sparqling-genomics/User")
+          (format port "<origin://~a> <~a> <http://sparqling-genomics/User/~a> .~%"
+                  origin-hash
+                  "http://sparqling-genomics/fileOwner"
+                  owner-name)
+          (format port "<origin://~a> <~a> ~s^^<~a> .~%"
+                  origin-hash
+                  "http://sparqling-genomics/fileSize"
+                  (number->string file-size)
+                  "http://www.w3.org/2001/XMLSchema#integer")
+          (format port "<origin://~a> <~a> <http://sparqling-genomics/Project/~a> .~%"
+                  origin-hash
+                  "http://sparqling-genomics/inProject"
+                  project)
+          (format port "<origin://~a> <~a> \"~a\"^^xsd:dateTimeStamp .~%"
+                  origin-hash
+                  "http://purl.org/dc/terms/modified"
+                  (strftime "%Y-%m-%dT%H-%M-%SZ" (gmtime (stat:mtime fs-stat))))))
+      (lambda (key . args) #f))
+    (close-port port)))
+
+;; ---------------------------------------------------------------------------
+;; PROBE FUNCTIONS
+;; ---------------------------------------------------------------------------
+;;
+;; The following section defines ways to find files to process.
+;;
+
+(define (include-vcf-file? entry)
+  (or (string-suffix? ".vcf" entry)
+      (string-suffix? ".vcf.gz" entry)
+      (string-suffix? ".bcf" entry)
+      (string-suffix? ".bcf.gz" entry)))
+
+(define (include-bam-file? entry)
+  (or (string-suffix? ".bam" entry)
+      (string-suffix? ".sam" entry)
+      (string-suffix? ".cram" entry)))
+
+(define (extension entry)
+  (cond
+   [(string-suffix? ".vcf.gz" entry) ".vcf.gz"]
+   [(string-suffix? ".bcf.gz" entry) ".bcf.gz"]
+   [else (string-append "." (last (string-split entry #\.)))]))
+
+(define (find-files directory include-file?)
+  (if scan-recursively?
+      (let ((files '()))
+        (ftw directory
+             (lambda (filename statinfo flag)
+               (cond
+                [(eq? flag 'directory) #t]
+                [(eq? flag 'regular)
+                 (begin
+                   (when (include-file? filename)
+                     (when project
+                       (add-ownership-info project filename statinfo))
+                     (set! files (cons filename files)))
+                   #t)])))
+        files)
+      (map (lambda (entry)
+             (string-append (getcwd) "/" entry))
+           (scandir directory include-file?))))
+
+;; ---------------------------------------------------------------------------
+;; MAIN PROGRAM
+;; ---------------------------------------------------------------------------
+;;
+;; Actual execution starts here.
+;;
+
+;; Make sure the output directory exists.
+(mkdir-p output-directory)
+
+;; Create RDF for the project.
+(if project
+    (call-with-output-file project-file
+      (lambda (port)
+        (format port "<~a> <~a> <~a> .~%"
+                (string-append "http://sparqling-genomics/Project/" project)
+                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                "http://sparqling-genomics/Project")))
+    (format (current-error-port) "Warning: Not creating project triples.~%"))
+
+;; Create RDF for all VCF and BAM files found in the directory.
+(let ((vcf-input-files (find-files input-directory include-vcf-file?))
+      (bam-input-files (find-files input-directory include-bam-file?)))
+
+  ;; Process VCF files.
+  (n-par-for-each (string->number threads)
+                  (lambda (vcf-file)
+                    (let* ((input-dir-length (string-length input-directory))
+                           (file-extension (extension vcf-file))
+                           (destination (string-append output-directory "/"
+                             (string-drop
+                              (string-drop-right vcf-file
+                                                 (string-length file-extension))
+                              input-dir-length)
+                             ".n3" (if compress? ".gz" ""))))
+                      (mkdir-p (dirname destination))
+                      (let ((port (open-input-pipe
+                                   (string-append
+                                    "vcf2rdf"
+                                    (if metadata-only?
+                                        " --metadata-only" "")
+                                    " -i " vcf-file
+                                    " -O ntriples"
+                                    " 2> /dev/null"
+                                    (if compress?
+                                        " | gzip --stdout" "")
+                                    " > " destination))))
+                        ;; Silently absorb the input.
+                        (close-port port))))
+                  vcf-input-files)
+
+  ;; Process BAM files.
+  (n-par-for-each (string->number threads)
+                  (lambda (bam-file)
+                    (let* ((input-dir-length (string-length input-directory))
+                           (file-extension (extension bam-file))
+                           (destination (string-append output-directory "/"
+                             (string-drop
+                              (string-drop-right bam-file
+                                                 (string-length file-extension))
+                              input-dir-length)
+                             ".n3" (if compress? ".gz" ""))))
+                      (mkdir-p (dirname destination))
+                      (let ((port (open-input-pipe
+                                   (string-append
+                                    "bam2rdf"
+                                    (if metadata-only?
+                                        " --metadata-only" "")
+                                    " -i " bam-file
+                                    " -O ntriples"
+                                    " 2> /dev/null"
+                                    (if compress?
+                                        " | gzip --stdout" "")
+                                    " > " destination))))
+                        ;; Silently absorb the input.
+                        (close-port port))))
+                  bam-input-files))

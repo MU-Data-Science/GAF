@@ -1,0 +1,125 @@
+\documentclass[11pt,a4paper,oneside]{book}
+\usepackage{sparqling-genomics}
+\title{SPARQLing genomics}
+\author{Roel Janssen}
+
+\ifdefined\HCode
+\Configure{@HEAD}{\HCode{<meta charset="utf-8" />\Hnewline}}
+\Configure{@HEAD}{\HCode{<link rel="stylesheet" href="sparqling-genomics.css" />\Hnewline}}
+\Configure{@BODY}{\ifvmode\IgnorePar\fi\EndP\HCode{<div id="wrapper">}}
+\Configure{@/BODY}{\ifvmode\IgnorePar\fi\EndP\HCode{</div>}}
+\fi
+
+\begin{document}
+
+%% Some style rules for HTML output
+\ifdefined\HCode
+\CssFile
+body,html{
+  width: 100%;
+  height: 100%;
+  /*font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;*/
+  margin: 0px;
+  padding: 0px;
+  background-color: #eeeeee;
+}
+#wrapper {
+  max-width: 900px;
+  background-color: #ffffff;
+  padding: 10pt;
+  border-left: solid 1px #cccccc;
+  border-right: solid 1px #cccccc;
+  margin: auto;
+  height: auto;
+}
+.ectt-1095 {
+ font-family: fixed-width;
+}
+.verbatim {
+  text-align: left;
+  font-family: "Lucida Console", Monaco, monospace;
+  font-size: 10pt;
+  font-style: normal;
+  background: #e3e2db;
+  padding: 4pt;
+  -webkit-border-radius: 2pt;
+  -moz-border-radius: 2pt;
+  border-radius: 2pt;
+  border: solid 2px #c8c4b7;
+}
+.center {
+  text-align: center;
+}
+.chapterHead {
+  margin-top: 100pt;
+  padding: 10pt;
+  background-color: #444444 /*#ffe680*/ /*#fff6d5*/;
+  color: #eeeeee;
+  border-bottom: solid 2px #000;
+  -webkit-border-radius: 4pt 4pt 0pt 0pt;
+  -moz-border-radius: 4pt 4pt 0pt 0pt;
+  border-radius: 4pt 4pt 0pt 0pt;
+}
+table { width: 100%; }
+table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+.tableofcontents {
+  background-color: #f9f9f9;
+  border: solid 2px #f0f0f0;
+  padding: 10pt;
+  -webkit-border-radius: 4pt;
+  -moz-border-radius: 4pt;
+  border-radius: 4pt;
+}
+\EndCssFile
+\fi
+
+\begin{titlepage}
+  \topskip0pt
+  \vspace*{\fill}
+  \begin{center}
+    \ifdefined\HCode
+    % The build system copies the logo to the same directory as the HTML files.
+    % Therefore we must not specify the actual path towards ‘logo.png’.
+    \includegraphics[width=0.75\textwidth]{logo.png}~\\
+    \else
+    \includegraphics[width=0.75\textwidth]{figures/logo.pdf}
+    \fi
+    %\Huge SPARQLing genomics
+    \rule{0.75\textwidth}{1.0pt}~\\
+    %\Large Roel Janssen~\\~\\
+    \url{https://www.sparqling-genomics.org}~\\
+    \large version \sgversion{}, \today{}
+    % Put it a little bit above the center of the page.
+    \ifdefined\HCode
+    \else
+    ~\\~\\~\\~\\~\\~\\~\\~\\~\\~\\~\\~\\~\\~\\
+    \fi
+  \end{center}
+  \topskip0pt
+  \vspace*{\fill}
+
+  \thispagestyle{empty}
+\end{titlepage}
+
+\setcounter{page}{1}
+\pagenumbering{roman}
+\hypersetup{linkcolor=black}
+\tableofcontents
+\newpage{}
+\hypersetup{linkcolor=LinkGray}
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+\input{introduction}
+\input{knowledge-graph}
+\input{implemented-ontologies}
+\input{command-line-tools}
+\input{web-interface}
+\input{information-retrieval}
+\input{information-management}
+\input{programming-with-sparql}
+\bibliography{references}
+
+\end{document}

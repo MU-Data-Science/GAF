@@ -1,0 +1,668 @@
+\chapter{Command-line programs}
+\label{chap:command-line}
+
+  SPARQLing genomics provides programs to create an extensive knowledge graph
+  from various domain-specific data formats.  The programs described in this
+  chapter provide the ``layer 0'' for the knowledge graph, and the tools to
+  discover the data in this layer.   All tools described in the remainder of
+  this chapter can be invoked with the \texttt{-{}-help} argument to get a
+  complete overview of options for that particular tool.
+
+\section{Preparing variant call data with \program{vcf2rdf}}
+\label{sec:vcf2rdf}
+
+  Variant callers extract variation from sequenced data.  These programs
+  often output the variants they found in the \emph{Variant Call Format}
+  (VCF) or its binary equivalent (BCF).  The \program{vcf2rdf} program
+  extracts knowledge from a VCF or BCF file and writes it as RDF.
+
+\subsection{Knowledge extracted by \program{vcf2rdf}}
+
+  The program treats the VCF as its own ontology.  It uses the VCF header as
+  a guide.  All fields described in the header of the VCF file will be
+  translated into triples.  In addition to the knowledge from the VCF file,
+  \program{vcf2rdf} provides the following triples:
+
+  \begin{table}[H]
+    \begin{tabularx}{\textwidth}{*{3}{!{\VRule[-1pt]}l}!{\VRule[-1pt]}L}
+      \headrow
+      \textbf{Subject}     & \textbf{Predicate}   & \textbf{Object}
+      & \textbf{Description}\\
+      \evenrow
+      \origin{\emph{MD5}}  & \rdf{type}       & \sg{Origin}
+      & This defines a uniquely identifiable reference to the originating file.\\
+      \oddrow
+      \origin{\emph{MD5}}  & \sg{filename}    & \emph{filename}
+      & This triple states the originating filename.\\
+      \evenrow
+      \origin{\emph{MD5}}  & \sg{md5}         & \emph{MD5 sum}
+      & This triple states the MD5 sum of the content of the original file.\\
+      \oddrow
+      \sample{\emph{name}} & \rdf{type}       & \sg{Sample}
+      & This states that there is a sample with \emph{sample name}.\\
+      \evenrow
+      \sample{\emph{name}} & \sg{foundIn}     & \origin{\emph{MD5}}
+      & This triple states that a sample can be found in a file identified by
+      the \sg{Origin} with a specific identifier.\\
+      \oddrow
+      \origin{\emph{MD5}}  & \sg{convertedBy} & \sgv{vcf2rdf}
+      & This triple states that the file was converted with \program{vcf2rdf}.\\
+    \end{tabularx}
+    \caption{\small The additional triple patterns provided by \program{vcf2rdf}.}
+    \label{table:vcf2rdf-ontology}
+  \end{table}
+
+  The following snippet is an example of the extra data in Turtle-format:
+
+\begin{siderules}
+\begin{lstlisting}
+@prefix sg: <https://sparqling-genomics.org/(@*\sgversion{}*@)/> .
+@prefix orig: <origin://> .
+
+orig:e9e38f2e4279eda346918ba69fd86c5f
+    a sg:Origin ;
+    sg:convertedBy <https://sparqling-genomics.org/(@*\sgversion{}*@)/vcf2rdf-(@*\sgversion{}*@)> ;
+    sg:filename "tests/sample.vcf"^^xsd:string ;
+    sg:md5 "e9e38f2e4279eda346918ba69fd86c5f"^^xsd:string .
+
+<origin://e9e38f2e4279eda346918ba69fd86c5f@S0>
+    a sg:Sample ;
+    rdfs:label "SAMLPEA"^^xsd:string ;
+    sg:foundIn orig:e9e38f2e4279eda346918ba69fd86c5f .
+\end{lstlisting}
+\end{siderules}
+
+\subsection{Handling multi-sample VCF files}
+
+  From version \texttt{0.99.11} onwards, \program{vcf2rdf} only writes variants
+  that have at least one alternative allele specified.  It will reserve the
+  numeric ID to preserve compatibility with previous and future versions.
+
+  The numeric IDs are calculated left-to-right, top-to-bottom.  So for a file
+  containing two samples, the first variant for the first sample will receive
+  the numeric ID $0$, and the first variant for the second sample will receive
+  numeric ID $1$.  The second variant for the first sample receives numeric ID
+  $2$, and so on.
+
+\subsection{Example usage}
+
+The following command invocation will produce RDF in the \texttt{ntriples}
+format:
+\begin{siderules}
+\begin{verbatim}
+vcf2rdf -i /path/to/my/variants.vcf > /path/to/my/variants.n3
+\end{verbatim}
+\end{siderules}
+
+To get a complete overview of options for this program, use:
+\begin{siderules}
+\begin{verbatim}
+vcf2rdf --help
+\end{verbatim}
+\end{siderules}
+
+\subsection{Run-time properties}
+
+  Depending on the serialization format, the program typically uses from two megabytes
+  (in \texttt{ntriples} mode), to multiple times the size of the input VCF
+  (in \texttt{turtle} mode).
+
+  The \texttt{ntriples} mode can output triples as soon as they are formed, while the
+  \texttt{turtle} mode waits until all triples are known, so that it can output them
+  efficiently, producing compact output at the cost of using more memory.
+
+  We recommend using the \texttt{ntriples} format for large input files, and
+  \texttt{turtle} for small input files.  The following example illustrates how to
+  use \texttt{turtle} mode.
+
+\begin{siderules}
+\begin{verbatim}
+vcf2rdf -i /path/to/my/variants.vcf -O turtle > /path/to/my/variants.ttl
+\end{verbatim}
+\end{siderules}
+
+\section{Preparing sequence alignment maps with \program{bam2rdf}}
+
+  When DNA sequencing reads are aligned to a predetermined \emph{reference
+  genome}, it's often formatted in the \emph{sequence alignment map} (SAM)
+  format, its equivalent \emph{binary alignment map} (BAM) format, or its
+  equivalent CRAM format.  The \program{bam2rdf} program can read data in all
+  three formats.
+
+\subsection{Knowledge extracted by \program{bam2rdf}}
+
+  The current version of \program{bam2rdf} merely extracts information from the
+  alignment map header.  In addition to the knowledge from the file, it also
+  produces the following metadata:
+
+  \begin{table}[H]
+    \begin{tabularx}{\linewidth}{>{\hsize=0.18\hsize}X
+        !{\VRule[-1pt]}>{\hsize=0.20\hsize}X
+        !{\VRule[-1pt]}>{\hsize=0.32\hsize}L
+        !{\VRule[-1pt]}>{\hsize=0.30\hsize}L}
+      \headrow
+      \textbf{Subject} & \textbf{Predicate} & \textbf{Object}
+      & \textbf{Description}\\
+      \evenrow
+      \origin{\emph{MD5}} & \rdf{type}    & \sg{Origin}
+      & This defines a uniquely identifiable reference to the originating file.\\
+      \oddrow
+      \origin{\emph{MD5}} & \sg{filename} &  \emph{filename}
+      & This triple states the originating filename.\\
+      \evenrow
+      \origin{\emph{MD5}} & \rdf{type}    & One of: \bamrdf{HeaderItem},
+      \bamrdf{ReferenceSequence}, \bamrdf{ReadGroup}, \bamrdf{Program},
+      \bamrdf{Comment}.
+      & The \emph{objects} correspond to the various types of header lines that
+      can occur in the SAM format.\\
+      \oddrow
+      \origin{\emph{MD5}} & \bamrdf{\emph{type}/\emph{key}} & Literal value.
+      & Each header field consists of a key/value pair.  The key is used as
+      predicate.\\
+      \oddrow
+      \origin{\emph{MD5}} & \sg{convertedBy} & \sgv{bam2rdf}
+      & This triple states that the file was converted with \program{bam2rdf}.\\
+    \end{tabularx}
+    \caption{\small The additional triple patterns provided by \program{bam2rdf}.}
+    \label{table:bam2rdf-ontology}
+  \end{table}
+
+\subsection{Example usage}
+
+The following command invocation will produce RDF in the \texttt{ntriples}
+format:
+\begin{siderules}
+\begin{verbatim}
+bam2rdf -i /path/to/my/sequencing_data.bam > /path/to/my/sequencing_data.n3
+\end{verbatim}
+\end{siderules}
+
+To get a complete overview of options for this program, use:
+\begin{siderules}
+\begin{verbatim}
+bam2rdf --help
+\end{verbatim}
+\end{siderules}
+
+\section{Preparing tabular data with \program{table2rdf}}
+\label{sec:table2rdf}
+
+  Data that can be represented as a table, like comma-separated values (CSV)
+  or BED files, can be imported using \program{table2rdf}.  The column headers
+  are used as predicates, and each row gets a unique row ID.  Non-alphanumeric
+  characters in the header line are replaced by underscores, and all characters
+  are replaced by their lowercase equivalent to make a consistent scheme for
+  predicates.
+
+  When the file does not contain a header line, one can be specified using the
+  \texttt{-{}-header-line} argument.  When using this command-line argument, the
+  delimiter must be a semicolon (\texttt{;}).
+
+  The program can also read files compressed with \program{gzip}.
+
+\subsection{Transforming objects}
+
+  Unfortunately, \program{table2rdf} knows nothing about ontologies.  So when
+  the input table has a column ``Chromosome'', by default \program{table2rdf}
+  will treat these cells as literal values (as a \texttt{string}).  A
+  \emph{transformer} can be used to express a column as an \emph{individual} in
+  RDF.  An example might explain this best.
+
+  Take the following input file:
+\begin{siderules}
+\begin{verbatim}
+$ cat test.tsv
+Chromosome      Position
+chr1    1500000
+chrMT   11000
+\end{verbatim}
+\end{siderules}
+
+  Running \program{table2rdf} with its default settings will produce:
+
+\begin{siderules}
+\begin{verbatim}
+$ table2rdf -i test.tsv -O turtle
+...
+<origin://...@0>
+    sg:originatedFrom <http://sparqling-genomics/...> ;
+    col:chromosome "chr1"^^xsd:string ;
+    col:position 1500000 ;
+    a :Row .
+
+<origin://...@1>
+    sg:originatedFrom <http://sparqling-genomics/...> ;
+    col:chromosome "chrMT"^^xsd:string ;
+    col:position 11000 ;
+    a :Row .
+...
+\end{verbatim}
+\end{siderules}
+
+  \begin{sloppypar}
+  When we know that the data in a column refers to items in an ontology, like
+  chromosomes defined in
+  \href{http://rdf.biosemantics.org/data/genomeassemblies/hg19}%
+  {<http://rdf.biosemantics.org/data/genomeassemblies/hg19>}, \program{table2rdf}
+  can be told to use that ontology to describe that column.
+  \end{sloppypar}
+
+  To do so, we use the \texttt{-{}-transform-object} option, or \texttt{-t}
+  for short:
+
+\begin{siderules}
+\begin{lstlisting}
+$ table2rdf -O turtle \
+    -i test.tsv       \
+    -t Chromosome=http://rdf.biosemantics.org/data/genomeassemblies/hg19#
+...
+(@*\colorbox{Highlight}{@prefix p00000: <http://rdf.biosemantics.org/data/genomeassemblies/hg19\#> .}*@)
+...
+<http://sparqling-genomics/table2rdf/Row/...-R0000000000>
+    sg:originatedFrom <http://sparqling-genomics/...> ;
+    (@*\colorbox{Highlight}{col:chromosome p00000:chr1 ;}*@)
+    col:position 1500000 ;
+    a :Row .
+
+<http://sparqling-genomics/table2rdf/Row/...-R0000000001>
+    sg:originatedFrom <http://sparqling-genomics/...> ;
+    (@*\colorbox{Highlight}{col:chromosome p00000:chrMT ;}*@)
+    col:position 11000 ;
+    a :Row .
+...
+\end{lstlisting}
+\end{siderules}
+
+  After the transformation, the output produced by \texttt{table2rdf} uses
+  URIs pointing to the ontology instead of literal values for chromosomes.
+
+\subsection{Transforming predicates}
+
+  Like transforming a cell in a table to a URI instead of a literal value,
+  we can also specify the value for the column name.  By default, the column
+  names are transformed using the \tablerdf{Column/} prefix (e.g.
+  \texttt{chromosome} becomes
+  \texttt{sg://\sgversion{}/table2rdf/Column/chromosome}).  By using
+  the \texttt{-{}-transform-predicate} option, or \texttt{-T} for short, a
+  different transformation can be made:
+
+\begin{siderules}
+\begin{lstlisting}
+$ table2rdf -O turtle \
+    -i test.tsv       \
+    -t Chromosome=http://rdf.biosemantics.org/data/genomeassemblies/hg19# \
+    -T Chromosome=http://biohackathon.org/resource/faldo#reference
+...
+(@*\colorbox{Highlight}{@prefix p00000: <http://rdf.biosemantics.org/data/genomeassemblies/hg19\#> .}*@)
+(@*\colorbox{Highlight}{@prefix p00001: <http://biohackathon.org/resource/faldo\#> .}*@)
+
+<origin://...@0>
+    sg:originatedFrom <origin://...> ;
+    (@*\colorbox{Highlight}{p00001:reference p00000:chr1 ;}*@)
+    col:position 1500000 ;
+    a :Row .
+
+<origin://...@1>
+    sg:originatedFrom <origin://...> ;
+    (@*\colorbox{Highlight}{p00001:reference p00000:chrMT ;}*@)
+    col:position 11000 ;
+    a :Row .
+...
+\end{lstlisting}
+\end{siderules}
+
+\subsection{Delimiters}
+
+  Tabular data consists of rows and columns.  A field is a specific place in
+  a table, having a column-coordinate, and a row-coordinate.  To distinguish
+  fields from one another we use a delimiter.  Which delimiter to use (a tab,
+  a comma, or a semicolon, etc.) is up to the dataset.  The delimiter
+  can be chosen using the \texttt{-{}-delimiter} option, or \texttt{-d} for
+  short.
+
+  Sometimes a single field can consist of multiple ``subfields''.  To
+  distinguish subfields, we use a secondary delimiter.  In RDF, we can split
+  those subfields by using the same predicate as we would use for the entire
+  field.  Using the \texttt{-{}-secondary-delimiter} option, we can invoke
+  this behavior.
+
+  The following example demonstrates the usage of \texttt{-{}-delimiter} and
+  \texttt{-{}-secondary-delimiter}.  Take the following input file:
+\begin{siderules}
+\begin{verbatim}
+$ cat multi.tsv
+Chromosome	Position	Filter
+1	10000	A;B;C;D
+\end{verbatim}
+\end{siderules}
+
+  Without using the secondary delimiter, we get:
+
+\begin{siderules}
+\begin{lstlisting}
+$ table2rdf -i multi.tsv -O turtle
+...
+<origin://...@0>
+    sg:originatedFrom <http://sparqling-genomics/...> ;
+    col:chromosome 1 ;
+    (@*\colorbox{Highlight}{col:filter "A;B;C;D"\^{}\^{}xsd:string ;}*@)
+    col:position 10000 ;
+    a :Row .
+\end{lstlisting}
+\end{siderules}
+
+  Using the secondary delimiter, we get:
+
+\begin{siderules}
+\begin{lstlisting}
+$ table2rdf -i multi.tsv --secondary-delimiter ";" -O turtle
+...
+<origin://...@0>
+    sg:originatedFrom <http://sparqling-genomics/...> ;
+    col:chromosome 1 ;
+    (@*\colorbox{Highlight}{col:filter "A"\^{}\^{}xsd:string, "B"\^{}\^{}xsd:string, "C"\^{}\^{}xsd:string,}*@)
+    (@*\colorbox{Highlight}{\space\space\space\space\space\space\space\space\space\space\space"D"\^{}\^{}xsd:string ;}*@)
+    col:position 10000 ;
+    a :Row .
+\end{lstlisting}
+\end{siderules}
+
+  Notice how the \texttt{col:filter} predicate now describes a
+  connection to four objects instead of one.
+
+\subsection{Knowledge extracted by \program{table2rdf}}
+
+  The \program{table2rdf} program extracts all fields in the table.  In addition
+  to the knowledge from the table file, \program{table2rdf} stores the following
+  metadata:
+
+    \begin{table}[H]
+      \begin{tabularx}{\textwidth}{*{3}{!{\VRule[-1pt]}l}!{\VRule[-1pt]}L}
+      \headrow
+      \textbf{Subject}     & \textbf{Predicate}    & \textbf{Object}
+      & \textbf{Description}\\
+      \evenrow
+      \origin{\emph{MD5}}  & \rdf{type}            & \sg{Origin}
+      & This defines a uniquely identifiable reference to the originating
+        file.\\
+      \oddrow
+      \origin{\emph{MD5}}  & \texttt{:filename}    & \emph{filename}
+      & This triple states the originating filename.\\
+      \evenrow
+      \origin{\emph{MD5}}  & \texttt{:convertedBy} & \sgv{table2rdf}
+      & This triple states that the file was converted with
+        \program{table2rdf}.\\
+    \end{tabularx}
+    \caption{\small The additional triple patterns provided by \program{table2rdf}.}
+    \label{table:table2rdf-ontology}
+  \end{table}
+
+  The following snippet is an example of the extra data in Turtle-format:
+
+\begin{siderules}
+\begin{verbatim}
+<origin://1jka8923i4>
+    :convertedBy :table2rdf ;
+    :filename "grch37.bed"^^xsd:string ;
+    a :Origin .
+
+sample:grch37
+    :foundIn <origin://1jka8923i4> ;
+    a :Sample .
+\end{verbatim}
+\end{siderules}
+
+\subsection{Example usage}
+
+The following command invocation will produce RDF in the \texttt{ntriples}
+format:
+\begin{siderules}
+\begin{verbatim}
+table2rdf -i /path/to/my/table.tsv > /path/to/my/table.n3
+\end{verbatim}
+\end{siderules}
+
+To get a complete overview of options for this program, use:
+\begin{siderules}
+\begin{verbatim}
+table2rdf --help
+\end{verbatim}
+\end{siderules}
+
+\section{Converting MySQL data to RDF with \program{table2rdf}}
+
+  Relational databases store data in tables.  With \program{table2rdf} we
+  can oftentimes convert the data in a single go to RDF triples.  The following
+  example extracts the \texttt{regions} table from a MySQL server in a database
+  called \texttt{example}.
+
+\begin{siderules}
+\begin{verbatim}
+mysql --host=127.0.0.1 -e "SELECT * FROM example.regions" \
+      --batch | table2rdf --stdin > regions.n3
+\end{verbatim}
+\end{siderules}
+
+  The \program{mysql} command outputs the table in tab-delimited form when using
+  the \texttt{-{}-batch} argument, which is the default input type for
+  \program{table2rdf}.  To accept input from a UNIX pipe \program{table2rdf} must
+  be invoked with the \texttt{-{}-stdin} argument.
+
+\section{Preparing XML data with \program{xml2rdf}}
+\label{sec:xml2rdf}
+
+  Data encoded in the EXtensible Markup Language (XML) can be converted to RDF
+  in a naive way by \program{xml2rdf}.  A child element refers to its parent with
+  the \sg{isPartOf} predicate.
+
+  \begin{table}[H]
+    \begin{tabularx}{\textwidth}{*{3}{!{\VRule[-1pt]}l}!{\VRule[-1pt]}L}
+      \headrow
+      \textbf{Subject}    & \textbf{Predicate}    & \textbf{Object}
+      & \textbf{Description}\\
+      \evenrow
+      \origin{\emph{MD5}} & \rdf{type}            & \sg{Origin}
+      & This defines a uniquely identifiable reference to the originating
+        file.\\
+      \oddrow
+      \origin{\emph{MD5}} & \sg{filename}         & \emph{filename}
+      & This triple states the originating filename.\\
+      \evenrow
+      \origin{\emph{MD5}} & \sg{convertedBy}      & \sgv{xml2rdf}
+      & This triple states that the file was converted with
+        \program{xml2rdf}.\\
+    \end{tabularx}
+    \caption{\small The triplet patterns used by \program{xml2rdf}.}
+    \label{table:xml2rdf-ontology}
+  \end{table}
+
+\subsection{Example usage}
+The following command invocation will produce RDF in the \texttt{ntriples}
+format:
+\begin{siderules}
+\begin{verbatim}
+xml2rdf -i /path/to/my/data.xml > /path/to/my/data.n3
+\end{verbatim}
+\end{siderules}
+
+To get a complete overview of options for this program, use:
+\begin{siderules}
+\begin{verbatim}
+xml2rdf --help
+\end{verbatim}
+\end{siderules}
+
+\section{Preparing JSON data with \program{json2rdf}}
+\label{sec:json2rdf}
+
+  The JavaScript Object Notation (JSON) has become a popular format
+  for encoding information from and to web APIs.  With \program{json2rdf},
+  a layer 0 representation in RDF can be created.
+
+\subsection{Knowledge extracted by \program{json2rdf}}
+
+  Each key-value pair is translated into \triplet{Unique ID}{key}{value}.
+  When the value of a pair contains a structure with more key-value pairs,
+  the triplet's value refers to the \texttt{unique-id} assigned to that
+  structure.  In addition to the key-value pairs, \program{json2rdf} stores
+  the following metadata:
+
+  \begin{table}[H]
+    \begin{tabularx}{\textwidth}{*{3}{!{\VRule[-1pt]}l}!{\VRule[-1pt]}L}
+      \headrow
+      \textbf{Subject} & \textbf{Predicate} & \textbf{Object}
+      & \textbf{Description}\\
+      \evenrow
+      \origin{\emph{MD5}}  & \rdf{type}       & \sg{Origin}
+      & This defines a uniquely identifiable reference to the originating file.\\
+      \oddrow
+      \origin{\emph{MD5}}  & \sg{filename}    & \emph{filename}
+      & This triple states the originating filename.\\
+      \evenrow
+      \origin{\emph{MD5}} & \sg{convertedBy}  & \sgv{json2rdf}
+      & This triple states that the file was converted with
+        \program{json2rdf}.\\
+    \end{tabularx}
+    \caption{\small The triplet patterns used by \program{xml2rdf}.}
+    \label{table:json2rdf-ontology}
+  \end{table}
+
+\subsection{Example usage}
+
+The following command invocation will produce RDF in the \texttt{ntriples}
+format:
+\begin{siderules}
+\begin{verbatim}
+json2rdf -i /path/to/my/data.json > /path/to/my/data.n3
+\end{verbatim}
+\end{siderules}
+
+To get a complete overview of options for this program, use:
+\begin{siderules}
+\begin{verbatim}
+json2rdf --help
+\end{verbatim}
+\end{siderules}
+
+\section{Extracting knowledge from folders with \texttt{folder2rdf}}
+\label{sec:folder2rdf}
+
+  The \program{folder2rdf} program finds files in a directory to extract
+  knowledge from.  It attempts to convert files with extensions
+  \texttt{.vcf}, \texttt{.vcf.gz}, \texttt{.bcf}, and \texttt{.bcf.gz}
+  using \program{vcf2rdf}, and files with extensions \texttt{.sam},
+  \texttt{.bam}, and \texttt{.cram} using \program{bam2rdf}.
+
+\subsection{Example usage}
+
+\begin{siderules}
+\begin{verbatim}
+folder2rdf --input-directory=/vcf-data   \
+           --output-directory=/rdf-data  \
+           --project-name Example        \
+           --recursive                   \
+           --compress                    \
+           --threads=4
+\end{verbatim}
+\end{siderules}
+
+  $\ldots{}$ where \texttt{/vcf-data} is a directory containing VCF files,
+  and \texttt{/rdf-data} is the directory to store the converted files.
+
+\subsection{Knowledge extracted by \program{folder2rdf}}
+
+  In addition to the knowledge extracted by \program{vcf2rdf}, this program
+  extracts the following data:
+
+  \begin{table}[H]
+    \begin{tabularx}{\textwidth}{*{3}{!{\VRule[-1pt]}l}!{\VRule[-1pt]}L}
+      \headrow
+      \textbf{Subject}                 & \textbf{Predicate} & \textbf{Object}
+      & \textbf{Description}\\
+      \evenrow
+      \project{\emph{project-name}}    & \rdf{type}         & \sg{Project}
+      & This defines the identifier for the project.\\
+      \oddrow
+      \user{\emph{username}}           & \rdf{type}         & \sg{User}
+      & This defines the identifier for the file owner (username).\\
+      \evenrow
+      \origin{\emph{MD5}}              & \rdf{type}         & \sg{Origin}
+      & This defines a uniquely identifiable reference to the originating
+      file.\\
+    \end{tabularx}
+    \caption{\small The additional triple patterns produced by \program{folder2rdf}.}
+    \label{table:folder2rdf-ontology}
+  \end{table}
+
+\section{Importing data with \program{curl}}
+\label{sec:curl}
+
+  To load RDF data into a triple store (our database), we can use \program{curl}.
+
+  The triple stores typically store data in \emph{graphs}.  One triple store
+  can host multiple graphs, so we must tell the triple store which graph we
+  would like to add the data to.
+
+\subsection{Example usage}
+
+% Other types: application/n-triples
+\begin{siderules}
+\begin{verbatim}
+curl -X POST                                                 \
+     -H "Content-Type: text/turtle"                          \
+     -T /path/to/variants.ttl                                \
+     -G <endpoint URL>                                       \
+     --digest -u <username>:<password>                       \
+     --data-urlencode graph=http://example/graph
+\end{verbatim}
+\end{siderules}
+
+\subsubsection{Virtuoso example}
+
+\begin{sloppypar}
+The following example inserts the file \texttt{vcf2rdf-variants.ttl} into
+a graph called \texttt{http://example/graph} in a Virtuoso endpoint at
+\url{http://127.0.0.1:8890} with the username \texttt{dba} and
+password \texttt{qwerty}.
+\end{sloppypar}
+
+\begin{siderules}
+\begin{verbatim}
+curl -X POST                                                 \
+     -H "Content-Type: text/turtle"                          \
+     -T vcf2rdf-variants.ttl                                 \
+     -G http://127.0.0.1:8890/sparql-graph-crud-auth         \
+     --digest -u dba:qwerty                                  \
+     --data-urlencode graph=http://example/graph
+\end{verbatim}
+\end{siderules}
+
+\subsubsection{4store example}
+
+Similar to the Virtuoso example, for \program{4store} the command looks like
+this:
+
+\begin{siderules}
+\begin{verbatim}
+curl -X POST                                                 \
+     -H "Content-Type: text/turtle"                          \
+     -T vcf2rdf-variants.ttl                                 \
+     -G http://127.0.0.1:8080/data/http://example/graph
+\end{verbatim}
+\end{siderules}
+
+Notice that \program{4store} does not provide an authentication mechanism.
+
+\subsubsection{Sending \texttt{gzip}-compressed data}
+
+  When the RDF file is compressed with \program{gzip}, extra HTTP headers must
+  be added to the \program{curl} command:
+\begin{siderules}
+\begin{verbatim}
+curl -X POST                                                 \
+     -H "Content-Type: text/turtle"                          \
+     -H "Transfer-Encoding: chunked"                         \
+     -H "Content-Encoding: gzip"                             \
+     ...
+\end{verbatim}
+\end{siderules}

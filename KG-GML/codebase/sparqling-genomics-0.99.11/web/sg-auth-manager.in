@@ -1,0 +1,165 @@
+#!@GUILE@ --no-auto-compile
+-*- scheme -*-
+!#
+;;; Copyright © 2020  Roel Janssen <roel@gnu.org>
+;;;
+;;; This program is free software: you can redistribute it and/or
+;;; modify it under the terms of the GNU Affero General Public License
+;;; as published by the Free Software Foundation, either version 3 of
+;;; the License, or (at your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;; Affero General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU Affero General Public
+;;; License along with this program.  If not, see
+;;; <http://www.gnu.org/licenses/>.
+
+(use-modules (auth-manager config)
+             (auth-manager config-reader)
+             (auth-manager api)
+             (ice-9 getopt-long)
+             (ice-9 receive)
+             (ice-9 threads)
+             (logger)
+             (web client)
+             (web response)
+             (www base64))
+
+;; ---------------------------------------------------------------------------
+;; COMMAND-LINE PARSING
+;; ---------------------------------------------------------------------------
+;;
+;; The following section handles command-line arguments.
+;;
+
+(define program-options
+  '((version             (single-char #\v) (value #f))
+    (help                (single-char #\h) (value #f))
+    (error-log           (single-char #\e) (value #t))
+    (debug-log           (single-char #\d) (value #t))
+    (configuration-file  (single-char #\f) (value #t))))
+
+(define (show-help)
+  (for-each (lambda (line) (display line) (newline))
+   '("This is sg-auth-manager."
+     "  --help                     -h  Show this message."
+     "  --version                  -v  Show versioning information."
+     "  --error-log=ARG            -e  Path to the error logfile."
+     "  --debug-log=ARG            -d  Path to the debugging logfile."
+     "  --configuration-file=ARG   -f  Path to the configuration file."))
+  (exit 0))
+
+(define (show-version)
+  (display "SPARQLing-genomics @VERSION@")
+  (newline)
+  (exit 0))
+
+(define %config (getopt-long (command-line) program-options))
+
+(when (assoc-ref %config 'help)    (show-help))
+(when (assoc-ref %config 'version) (show-version))
+
+;; ----------------------------------------------------------------------------
+;; SET UP LOGGING
+;; ----------------------------------------------------------------------------
+;;
+;; Configure the debug and error ports.
+;;
+
+(if (assoc-ref %config 'error-log)
+    (begin
+      (set-default-error-port! (open-file (assoc-ref %config 'error-log) "a"))
+      (log-error "sg-auth-manager" "Started sg-auth-manager.")
+      (log-error "sg-auth-manager" "------------------------"))
+    (begin
+      (set-default-error-port! (current-error-port))
+      (log-error "sg-auth-manager" "Errors are logged to stderr.")
+      (log-error "sg-auth-manager" "Use --error-log to change this behavior.")))
+
+(when (assoc-ref %config 'debug-log)
+  (set-default-debug-port! (open-file (assoc-ref %config 'debug-log) "a"))
+  (log-debug "sg-auth-manager" "Started sg-auth-manager.")
+  (log-debug "sg-auth-manager" "------------------------"))
+
+;; ----------------------------------------------------------------------------
+;; READ CONFIGURATION FILE
+;; ----------------------------------------------------------------------------
+;;
+;; This code updates the initial configuration to pick up the user's settings.
+;;
+
+(let [(config-file (assoc-ref %config 'configuration-file))]
+  (if config-file
+      (unless (read-configuration-from-file config-file)
+        (exit 1))
+      (let [(sysconfig-file "@webconfdir@/sg-auth-manager.xml")]
+        (if (file-exists? sysconfig-file)
+            (unless (read-configuration-from-file sysconfig-file)
+              (exit 1))
+            (begin
+              (log-error "sg-auth-manager"
+               "Refused to run without a configuration file.")
+              (log-error "sg-auth-manager"
+               "Use --configuration-file to specify one.")
+              (exit 0))))))
+
+;; ----------------------------------------------------------------------------
+;; RUNNER
+;; ----------------------------------------------------------------------------
+;;
+;; This code runs the web server.
+;;
+
+(let ((address (inet-ntop (www-listen-address-family)
+                          (www-listen-address))))
+  (log-debug "sg-auth-manager"
+   "SPARQLing-genomics Authentication Manager is running at http://~a:~a"
+   (if (eq? (www-listen-address-family) AF_INET6)
+       (string-append "[" address "]")
+       address)
+   (www-listen-port)))
+
+(define (announce-availibility)
+  ;; Wait for the sg-auth-manager web server to start.
+  (let* ((address (make-socket-address (www-listen-address-family)
+                                       (www-listen-address)
+                                       (www-listen-port)))
+         (s (socket (www-listen-address-family) SOCK_STREAM 0)))
+    (while (catch #t
+             (lambda _ (connect s address))
+             (lambda _ #f))
+      (usleep 10))
+    (close s))
+
+  ;; Announce availability to the configured sg-web service.
+  (receive (header port)
+      (http-post (string-append (sg-web-uri) "/api/register-connection")
+                 #:headers    `((content-type . (application/s-expression))
+                                (accept       . ((application/s-expression))))
+                 #:streaming? #t
+                 #:body       (format #f "~s"
+                               `((name . ,(www-name))
+                                 (uri  . ,(self-uri)))))
+    (if (= (response-code header) 201)
+        (log-debug "sg-auth-manager"
+                   "Announcing node availability to ~a succeeded."
+                   (sg-web-uri))
+        (begin
+          (log-error "sg-auth-manager"
+                     "Announcing node availability to ~a failed with status code ~a."
+                     (sg-web-uri) (response-code header))
+          (log-error "sg-auth-manager" "Please restart sg-auth-manager.")))))
+
+(if (fork-on-startup?)
+    (let ((pid (primitive-fork)))
+      (if (eq? pid 0)
+          (start-server request-handler)
+          (begin
+            (announce-availibility)
+            (primitive-exit))))
+    (begin
+      (call-with-new-thread announce-availibility)
+      (start-server request-handler)))

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TestItem language="en_US.UTF-8">
+  <!-- This is a comment. -->
+  <Item1>
+    This is a free-text multi-line input.
+    Its purpose is to test whether it is fully reconstructed in RDF.
+  </Item1>
+  <Item2></Item2>
+  <Item3>123456789.123456789</Item3>
+  <Item4>This text contains "quotes".</Item4>
+  <!--
+      This is a multi-line comment.
+  -->
+  <Item5>
+    <SubItem1>     </SubItem1>
+    <SubItem2>This item contains 'single quotes'.</SubItem2>
+    <SubItem3>true</SubItem3>
+  </Item5>
+</TestItem>

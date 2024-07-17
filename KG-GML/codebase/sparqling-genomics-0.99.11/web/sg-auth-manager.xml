@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Please read chapter 5 “Web interface” of the manual and adjust this
+    configuration accordingly.
+-->
+<auth-manager>
+  <!-- Leave name out to use the system's hostname. -->
+  <name>Change me</name>
+  <public-uri>http://127.0.0.1:8001</public-uri>
+  <fork>1</fork>
+  <developer-mode>0</developer-mode>
+  <backtrace-on-error>0</backtrace-on-error>
+  <bind-address>127.0.0.1</bind-address>
+  <port>8081</port>
+  <upload-root>/data</upload-root>
+  <sg-web>
+    <api-uri>http://localhost:8080/api</api-uri>
+  </sg-web>
+  <rdf-store>
+    <sparql-uri>http://localhost:8890/sparql-auth</sparql-uri>
+    <backend>virtuoso</backend>
+    <username>changeme</username>
+    <password>changeme</password>
+    <!--
+         For Virtuoso configurations, include the path to the “isql” utility,
+         and the hostname and port for connecting to the ISQL interface.
+    -->
+    <isql-path>/usr/bin/isql</isql-path>
+    <isql-hostname>localhost</isql-hostname>
+    <isql-port>1111</isql-port>
+  </rdf-store>
+</auth-manager>

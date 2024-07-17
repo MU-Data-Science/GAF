@@ -1,0 +1,252 @@
+#!@GUILE@ --no-auto-compile
+-*- scheme -*-
+!#
+;;; Copyright © 2019  Roel Janssen <roel@gnu.org>
+;;;
+;;; This program is free software: you can redistribute it and/or
+;;; modify it under the terms of the GNU General Public License
+;;; as published by the Free Software Foundation, either version 3 of
+;;; the License, or (at your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;;; General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(use-modules (ice-9 getopt-long)
+             (ice-9 format)
+             (ice-9 receive)
+             (json)
+             (rnrs bytevectors)
+             (srfi srfi-1)
+             (web client)
+             (web response))
+
+;; ---------------------------------------------------------------------------
+;; COMMAND-LINE PARSING
+;; ---------------------------------------------------------------------------
+;;
+;; The following section handles command-line arguments.
+;;
+
+(define program-options
+  '((version             (single-char #\v) (value #f))
+    (help                (single-char #\h) (value #f))
+    (after               (single-char #\a) (value #t))
+    (batch-size          (single-char #\b) (value #t))
+    (category            (single-char #\c) (value #t))))
+
+(define (show-help)
+  (for-each (lambda (line) (display line) (newline))
+   '("This is ega2rdf."
+     "  --help          Show this message."
+     "  --version       Show versioning information."
+     "  --batch-size=N  Number of items to fetch in a single iteration."
+     "  --after=N       Start reading after N batches."
+     "  --category=ARG  One of 'studies',     'dacs',    'policies', "
+     "                         'samples',     'runs',    'experiments',"
+     "                         'analyses',    'datasets',"
+     "                         'submissions', 'files'."))
+  (exit 0))
+
+(define (show-version)
+  (display "ega2rdf @VERSION@")
+  (newline)
+  (exit 0))
+
+(define %config (getopt-long (command-line) program-options))
+
+(when (assoc-ref %config 'help)    (show-help))
+(when (assoc-ref %config 'version) (show-version))
+(unless (assoc-ref %config 'category)
+  (show-help))
+
+(define %start
+  (if (assoc-ref %config 'after)
+      (string->number (assoc-ref %config 'after))
+      0))
+
+(define %batch-size
+  (if (assoc-ref %config 'batch-size)
+      (string->number (assoc-ref %config 'batch-size))
+      10))
+
+(define (kv->rdf port subject key value)
+  (cond
+   ;; Write boolean values as booleans.
+   [(or (eq? value #t)
+        (eq? value #f))
+    (format #t "~a <https://ega-archive.org/terms/~a> ~a .~%"
+            subject key (if value "true" "false"))]
+
+   ;; Skip non-existent values.
+   [(eq?     value #nil)                 #t]
+   [(null?   value)                      #t]
+   [(and (string? value)
+         (string= value "N/A"))          #t]
+   [(and (string? value)
+         (string= value "NA"))           #t]
+   [(and (string? value)
+         (string= value "not provided")) #t]
+
+   [(and (string? value)
+         (string= key "released"))
+    (cond
+     [(and (string? value)
+           (string= value "RELEASED"))
+      (format #t "~a <https://ega-archive.org/terms/released> true .~%"
+              subject)]
+     [(and (string? value)
+           (string= value "NOT_RELEASED"))
+      (format #t "~a <https://ega-archive.org/terms/released> false .~%"
+              subject)]
+     [else
+      (format #t "~a <https://ega-archive.org/terms/released> ~s .~%"
+              subject value)])]
+
+   ;; Handle lists of values.
+   [(list? value)
+    (for-each (lambda (v) (kv->rdf port subject key v)) value)]
+
+   [(hash-table? value)
+    ;; TODO: Implement iterating over a hash table.
+    #t]
+   ;; Treat timestamps as timestamps.
+   [(or (string= key "creationTime") (string= key "releasedDate"))
+    (format #t "~a <https://ega-archive.org/terms/~a> ~s^^xsd:dateTimeStamp .~%"
+            subject key value)]
+
+   ;; Use Dublin Core's terms for title and description.
+   [(string= key "description")
+    (format #t "~a <http://purl.org/dc/terms/description> ~s .~%"
+            subject value)]
+   [(string= key "title")
+    (format #t "~a <http://purl.org/dc/terms/title> ~s .~%"
+            subject value)]
+
+   ;; The subject already contains the egaStableId.
+   [(string= key "egaStableId") #t]
+
+   ;; Write EGA identifiers as URIs
+   [(string= key "studyStableId")
+    (format #t "~a <https://ega-archive.org/terms/~a> <https://ega-archive.org/studies/~a> .~%"
+            subject key value)]
+
+   [(string= key "sampleStableId")
+    (format #t "~a <https://ega-archive.org/terms/~a> <https://ega-archive.org/samples/~a> .~%"
+            subject key value)]
+
+   [(string= key "policyStableId")
+    (format #t "~a <https://ega-archive.org/terms/~a> <https://ega-archive.org/policies/~a> .~%"
+            subject key value)]
+
+   ;; Write the rest as plain strings.
+   [else
+    (format #t "~a <https://ega-archive.org/terms/~a> ~s .~%"
+            subject key value)]))
+
+;; ---------------------------------------------------------------------------
+;; EGA FETCHING CODE
+;; ---------------------------------------------------------------------------
+;;
+;; The following section implements the actual EGA metadata fetching.
+;;
+
+(define %ega-api-uri "https://ega-archive.org/metadata/v2")
+
+(define* (fetch-ega-category category #:optional (number-of-items -1)
+                                                 (batch-size 10)
+                                                 (batch-round 0))
+  (cond
+   [(< number-of-items 0)
+    ;; Determine the value for ‘number-of-items’.
+    ;; ------------------------------------------------------------------
+    (receive (http-header port)
+        (http-get (string-append %ega-api-uri "/" category "?limit=1")
+                  #:streaming? #t)
+      (let [(http-code (response-code http-header))]
+        (cond
+         [(= http-code 200)
+          (let* [(data      (json->scm port))
+                 (header    (hash-ref data "header"))
+                 (response  (hash-ref data "response"))
+                 (items     (hash-ref response "numTotalResults"))]
+            (fetch-ega-category category items batch-size batch-round))]
+         [(or (= http-code 501) (= http-code 400))
+          (format (current-error-port)
+                  "The API does not support retrieving ~a~%" category)]
+         [else
+          (format (current-error-port)
+                  "Finding the number of ~a failed with HTTP status code ~a~%"
+                  category (response-code http-header))])))]
+
+   [(> number-of-items (* batch-size (1+ batch-round)))
+    (catch #t
+      (lambda _
+        (format (current-error-port)
+                "\rFetching ~a records ~a to ~a of ~a (~,2f %)"
+                category
+                (* batch-round batch-size)
+                (* (1+ batch-round) batch-size)
+                number-of-items
+                (* (/ (* batch-round batch-size) number-of-items) 100.0))
+
+        ;; Attempt to fetch ‘number-of-items’ items.
+        ;; ------------------------------------------------------------------
+        (receive (http-header port)
+            (http-get (format #f "~a/~a?limit=~a&skip=~a"
+                              %ega-api-uri
+                              category
+                              batch-size
+                              (* batch-round batch-size))
+                      #:streaming? #t)
+          (if (= (response-code http-header) 200)
+              (begin
+                (let* [(data     (json->scm port))
+                       (header   (hash-ref data "header"))
+                       (response (hash-ref data "response"))
+                       (items    (hash-ref response "result"))]
+                  (for-each
+                   (lambda (item)
+                     (let* [(egaStableId (hash-ref item "egaStableId"))
+                            (subject (string-append
+                                      "<https://ega-archive.org/" category "/"
+                                      egaStableId ">"))
+                            ;; Prevent producing half-a-batch of output.
+                            ;; Instead we build the ntriples for this batch as
+                            ;; a string and only write it after the complete
+                            ;; batch was processed.
+                            (output
+                             (call-with-output-string
+                               (lambda (out)
+                                 ;; Specifically mark datasets as dctype:Dataset so that
+                                 ;; the SG's web interface will pick it up.
+                                 (when (string= category "datasets")
+                                   (format out "~a ~a ~a .~%"
+                                           subject
+                                           "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"
+                                           "<http://purl.org/dc/dcmitype/Dataset>"))
+                                 (hash-for-each (lambda (k v) (kv->rdf out subject k v)) item))))]
+                       (display output)))
+                   items))
+                (fetch-ega-category category number-of-items batch-size (1+ batch-round)))
+              (throw 'fetch-failure))))
+      (lambda (key . args)
+        (format (current-error-port)
+                "Failed to fetch records ~a to ~a from ~a.  Retrying ...~%"
+                (* batch-round batch-size)
+                (* (1+ batch-round) batch-size)
+                category)
+        (fetch-ega-category category number-of-items batch-size batch-round)))]))
+
+(when (string= (assoc-ref %config 'category) "datasets")
+  (format #t "<%a> ~a ~a .~%"
+          %ega-api-uri
+          "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>"
+          "<http://purl.org/dc/dcmitype/Collection>"))
+
+(fetch-ega-category (assoc-ref %config 'category)
+                    -1 %batch-size %start)

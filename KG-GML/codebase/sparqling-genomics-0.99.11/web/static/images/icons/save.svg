@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   width="62.204403pt"
+   height="62.204403pt"
+   viewBox="0 0 21.944331 21.94433"
+   version="1.1"
+   id="svg5188">
+  <defs
+     id="defs5182" />
+  <metadata
+     id="metadata5185">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="g285"
+     transform="matrix(0.04548441,0,0,0.04548441,-0.71732778,-0.60789229)">
+    <g
+       id="Layer_2-6">
+      <path
+         id="path252"
+         d="M 432.792,13.188 H 51.594 c -19.882,0 -36,16.118 -36,36 V 460 c 0,19.882 16.118,36 36,36 h 410.812 c 19.882,0 36,-16.118 36,-36 V 102.826 c 0,-3.652 -1.072,-7.223 -3.084,-10.271 L 448.54,21.663 c -3.492,-5.291 -9.408,-8.475 -15.748,-8.475 z"
+         fill="#464a4c" />
+    </g>
+    <g
+       id="Layer_3-7">
+      <path
+         id="path255"
+         d="m 119.3,238.079 h 275.4 c 15.906,0 28.8,12.894 28.8,28.8 v 166.154 c 0,15.906 -12.894,28.8 -28.8,28.8 H 119.3 c -15.906,0 -28.8,-12.894 -28.8,-28.8 V 266.879 c 0,-15.906 12.894,-28.8 28.8,-28.8 z"
+         fill="#ededed" />
+    </g>
+    <g
+       id="Layer_4">
+      <path
+         id="path258"
+         d="m 250.264,44.037 h 160.011 c 7.953,0 14.4,6.447 14.4,14.4 V 192.42 c 0,7.953 -6.447,14.4 -14.4,14.4 H 250.264 c -7.953,0 -14.4,-6.447 -14.4,-14.4 V 58.437 c 0,-7.953 6.447,-14.4 14.4,-14.4 z"
+         fill="#ededed" />
+    </g>
+    <g
+       id="Layer_5">
+      <path
+         id="path261"
+         d="m 423.5,293 v -26.121 c 0,-15.906 -11.432,-28.8 -25.535,-28.8 h -281.93 c -14.102,0 -25.535,12.894 -25.535,28.8 V 293 Z"
+         fill="#59cafc"
+         style="fill:#92cfce" />
+    </g>
+    <g
+       id="Layer_6">
+      <path
+         id="path264"
+         d="m 396.362,186.784 h -29.846 c -3.976,0 -7.2,-3.224 -7.2,-7.2 V 71.273 c 0,-3.976 3.224,-7.2 7.2,-7.2 h 29.846 c 3.976,0 7.2,3.224 7.2,7.2 v 108.31 c -0.001,3.977 -3.224,7.201 -7.2,7.201 z"
+         fill="#132028" />
+    </g>
+  </g>
+</svg>

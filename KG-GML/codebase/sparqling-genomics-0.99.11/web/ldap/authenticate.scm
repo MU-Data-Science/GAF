@@ -1,0 +1,148 @@
+;;; Copyright © 2018 Roel Janssen <roel@gnu.org>
+;;;
+;;; This program is free software; you can redistribute it and/or modify it
+;;; under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation; either version 3 of the License, or (at
+;;; your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful, but
+;;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;; GNU General Public License for more details.
+;;;
+;;; You should have received a copy of the GNU General Public License
+;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define-module (ldap authenticate)
+  #:use-module (ice-9 receive)
+  #:use-module (ice-9 format)
+  #:use-module (srfi srfi-1)
+  #:use-module (system foreign)
+  #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-9)
+  #:use-module (rnrs bytevectors)
+  #:use-module (logger)
+  #:use-module (www config)
+
+  #:re-export (%null-pointer parse-c-struct int size_t * pointer->string)
+  #:export (may-access?
+            ldap-is-available?))
+
+;;
+;; LIBRARY HANDLE
+;; ----------------------------------------------------------------------------
+
+(define %ldap-handle %null-pointer)
+
+(define (ldap-link-library)
+  (catch 'misc-error
+    (lambda _
+      (set! %ldap-handle (dynamic-link (if (string= "" "")
+                                           "libldap"
+                                           ""))))
+    (lambda (key . args)
+      (set! %ldap-handle %null-pointer)
+      #f))
+  (dynamic-object? %ldap-handle))
+
+(define (ldap-unlink-library)
+  (dynamic-unlink %ldap-handle))
+
+(ldap-link-library)
+
+(define (ldap-is-available?)
+  (dynamic-object? %ldap-handle))
+
+;;
+;; CONVENIENCE MACRO
+;; ----------------------------------------------------------------------------
+
+(define-syntax-rule
+  (define-foreign-function symbol handle return-type c-function args)
+  (define symbol
+    (if (eq? handle %null-pointer)
+        #f
+        (pointer->procedure return-type
+                            (dynamic-func c-function handle) args))))
+
+;;
+;; LIBLDAP FUNCTIONS
+;; ----------------------------------------------------------------------------
+
+(define-foreign-function ldap-initialize
+  %ldap-handle int "ldap_initialize" '(* *))
+
+(define-foreign-function ldap-simple-bind-synchronous
+  %ldap-handle int "ldap_simple_bind_s" '(* * *))
+
+(define-foreign-function ldap-set-option
+  %ldap-handle int "ldap_set_option" `(* ,int *))
+
+(define-foreign-function ldap-error->string
+  %ldap-handle '* "ldap_err2string" (list int))
+
+(define-foreign-function ldap-unbind
+  %ldap-handle int "ldap_unbind" '(*))
+
+;;
+;; LIBLDAP CONSTANTS
+;; ----------------------------------------------------------------------------
+
+(define LDAP_VERSION3               (make-c-struct (list int) (list 3)))
+(define LDAP_OPT_PROTOCOL_VERSION   17)
+(define LDAP_OPT_X_TLS_CACERTFILE   24578)
+(define LDAP_OPT_X_TLS_CACERTDIR    24579)
+
+;;
+;; AUTHENTICATION FUNCTIONS
+;; ----------------------------------------------------------------------------
+
+(define (may-access? ldap-server-uri common-name organizational-unit domain
+                     username password)
+  (catch 'ldap-error
+    (lambda _
+      (let* ((connection       (bytevector->pointer
+                                (make-bytevector (sizeof size_t))))
+             (bind-dn          (string-append "cn=" username
+                                 (if common-name
+                                   (format #f "~{,~a~}"
+                                           (map (lambda (cn)
+                                                  (string-append "cn=" cn))
+                                                (string-split common-name #\.)))
+                                   "")
+                                 (if organizational-unit
+                                     (format #f ",ou=~a" organizational-unit)
+                                     "")
+                                 (format #f "~{,dc=~a~}"
+                                         (string-split domain #\.)))))
+
+        (when (ldap-ssl-certificate-directory)
+          (unless (zero? (ldap-set-option (dereference-pointer connection)
+                                          LDAP_OPT_X_TLS_CACERTDIR
+                                          (string->pointer
+                                           (ldap-ssl-certificate-directory))))
+            (throw 'ldap-error "Cannot set SSL certificate directory.")))
+
+        (when (ldap-ssl-certificate-file)
+          (unless (zero? (ldap-set-option (dereference-pointer connection)
+                                          LDAP_OPT_X_TLS_CACERTFILE
+                                          (string->pointer
+                                           (ldap-ssl-certificate-file))))
+            (throw 'ldap-error "Cannot set SSL certificate file.")))
+
+        (if (zero? (ldap-initialize connection (string->pointer ldap-server-uri)))
+            (begin
+              (unless (zero? (ldap-set-option (dereference-pointer connection)
+                                              LDAP_OPT_PROTOCOL_VERSION
+                                              LDAP_VERSION3))
+                (throw 'ldap-error "Cannot set protocol version."))
+              (let [(result (ldap-simple-bind-synchronous
+                             (dereference-pointer connection)
+                             (string->pointer bind-dn)
+                             (string->pointer password)))]
+                (ldap-unbind (dereference-pointer connection))
+                (zero? result)))
+            (throw 'ldap-error "Couldn't connect to ~s" ldap-server-uri))))
+    (lambda (key . args)
+      (log-error "may-access?" "~s" args)
+      #f)))

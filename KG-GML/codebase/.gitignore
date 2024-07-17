@@ -1,0 +1,15 @@
+wandb/*
+GENERATED-FILES/*
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+MODEL-*/*
+snpEff/*
+snpEff_genes.txt
+snpEff_summary.html
+blazegraph.*
+Uploads/*
+*.json
+
