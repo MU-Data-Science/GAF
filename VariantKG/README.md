@@ -99,8 +99,6 @@ Step 5: Run the following commands:
     $ cd /mydata/GAF/VariantKG/codebase/sparqling-genomics-0.99.11/tools
     $ make
 
-You are now ready to process VCFs and generate knowledge graphs by following the execution instructions in the [Processing-VCF-README.md](/NSF-RAPID-KGV/Processing-VCF/README.md)!
-
 <b>NOTE:</b> The given instructions have been tested in an environment with Python version 3.7.3. If using any other Python versions, you may encounter version mismatch issues for other packages being used.
 
 # Setting up Blazegraph
