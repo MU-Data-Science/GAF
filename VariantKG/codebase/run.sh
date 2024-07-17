@@ -3,9 +3,9 @@
 # echo "Removing old JNL file.."
 # rm /mydata/dgl/general/blazegraph.jnl
 
-blazegraph_path='/mydata/dgl/general/blazegraph.jar'
-triple_properties_path='/mydata/dgl/general/triple.properties'
-quad_properties_path='/mydata/dgl/general/quad.properties'
+blazegraph_path='/mydata/GAF/VariantKG/codebase/blazegraph.jar'
+triple_properties_path='/mydata/GAF/VariantKG/codebase/turtle.properties'
+quad_properties_path='/mydata/GAF/VariantKG/codebase/quad.properties'
 
 for file in "$1"/*; do
     if [[ $file == *.nq ]]; then 

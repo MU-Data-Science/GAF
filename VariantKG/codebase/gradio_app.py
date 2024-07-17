@@ -58,7 +58,7 @@ memory_used = []
 create_graph_button_clicked_flag = False
 upload_vcf_button_clicked_flag = False
 
-base_file_dir = "/mydata/dgl/general/Data/"
+base_file_dir = "/mydata/GAF/VariantKG/codebase/Data/"
 log_file_name = "create_graph.log"
 graph_output_path = ""
 create_graph_input_path = ""
