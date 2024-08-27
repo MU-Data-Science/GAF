@@ -16,6 +16,10 @@ Here's how to use on new system/instance:
 5- pip install backports.zoneinfo
 6- pipenv install -r requirements.txt
 
+goto settings.py and add the server ip to allowed hosts. 
+example run : python3 manage.py runserver 107.20.128.88:8000
+
+
 
 how to activate? cd to this directory and then `pipenv shell`
 link to yt : https://www.youtube.com/watch?v=rHux0gMZ3Eg&t=712s
