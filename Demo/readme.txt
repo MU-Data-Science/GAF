@@ -10,6 +10,9 @@ Here's how to use on new system/instance:
     sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt update
     sudo apt install python3.8
+    sudo apt update
+    sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev
+    pip install --upgrade pip setuptools wheel
 4- pipenv shell 
 5- pipenv install -r requirements.txt
 
