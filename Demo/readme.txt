@@ -4,13 +4,12 @@ pipfile.lock contains the env details.
 Here's how to use on new system/instance:
 1- install pipenv 
 2- cd to GAF/Demo 
-3- install python 3.8 following :
+3- install python 3.8 and dependencies following :
     sudo apt update
     sudo apt install software-properties-common
     sudo add-apt-repository ppa:deadsnakes/ppa
     sudo apt update
     sudo apt install python3.8
-    sudo apt update
     sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev
     pip install --upgrade pip setuptools wheel
 4- pipenv shell 
