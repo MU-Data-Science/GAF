@@ -13,7 +13,8 @@ Here's how to use on new system/instance:
     sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev
     pip install --upgrade pip setuptools wheel
 4- pipenv shell 
-5- pipenv install -r requirements.txt
+5- pip install backports.zoneinfo
+6- pipenv install -r requirements.txt
 
 
 how to activate? cd to this directory and then `pipenv shell`
