@@ -4,8 +4,14 @@ pipfile.lock contains the env details.
 Here's how to use on new system/instance:
 1- install pipenv 
 2- cd to GAF/Demo 
-3- pipenv shell 
-4- pipenv install -r requirements.txt
+3- install python 3.8 following :
+    sudo apt update
+    sudo apt install software-properties-common
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt update
+    sudo apt install python3.8
+4- pipenv shell 
+5- pipenv install -r requirements.txt
 
 
 how to activate? cd to this directory and then `pipenv shell`
