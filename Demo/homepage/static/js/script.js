@@ -367,31 +367,31 @@ async function showClusters(){
     selectionHeading3.innerHTML ="3. Choose Cluster";
     var i = 1 ;
     var i = 0 ;
-    //clusterUsages = [81,33,2]
+    clusterUsages = [81,33,2]
     
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     
-    var clusterUsages = []; 
+    // var clusterUsages = []; 
 
-    //fetch cluster utilisations
-    try { 
-        const response = await fetch('/getClusterUtilisations/',{
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json', 
-                'X-CSRFToken': csrftoken,
-            },
-        }) 
+    // //fetch cluster utilisations
+    // try { 
+    //     const response = await fetch('/getClusterUtilisations/',{
+    //         method: 'GET',
+    //         headers: {
+    //             'Content-Type': 'application/json', 
+    //             'X-CSRFToken': csrftoken,
+    //         },
+    //     }) 
         
-        const data = await response.json();
-        const result = JSON.parse(data.result); 
-        clusterUsages = clusterUsages.concat(result); 
-        console.log("clus usages inside = ",clusterUsages)
+    //     const data = await response.json();
+    //     const result = JSON.parse(data.result); 
+    //     clusterUsages = clusterUsages.concat(result); 
+    //     console.log("clus usages inside = ",clusterUsages)
  
-    }
-    catch (error) {
-        console.error('Error fetching data:', error);
-    }
+    // }
+    // catch (error) {
+    //     console.error('Error fetching data:', error);
+    // }
     
     
     clusters.options.forEach(options => {

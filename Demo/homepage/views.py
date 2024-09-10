@@ -215,7 +215,7 @@ def checkAvahRunning(ssh_args):
 logger = logging.getLogger(__name__)
 
 def cronFunc(): 
-    host = 'c220g1-031114.wisc.cloudlab.us' 
+    host = 'clnode001.clemson.cloudlab.us' 
     username = 'shared'        
     
     #1- read all the logs and update record for stages 
@@ -613,7 +613,6 @@ def execute_command_view(request):
             out = executeCommand(ssh_args)
             print("main file is :",out)
             
-            
             #append to main file 
             cmd = "sudo cat /proj/eva-public-PG0/{}secondary.txt >> /proj/eva-public-PG0/{}main.txt".format(cluster,cluster)
             print(" main append command is ",cmd)
@@ -637,8 +636,8 @@ def execute_command_view(request):
             ssh_args[-1] = cmd 
             out = int(executeCommand(ssh_args))
             
-            print("exiting the function forcefully")
-            return
+            # print("exiting the function forcefully")
+            # return
             if out > 10:
                 print("got enough sequences to run job!")
                 # #empty main genome file 
@@ -707,18 +706,12 @@ def execute_command_view(request):
                 
                 cmd = '/users/shared/AVAH/scripts/run_variant_analysis_at_scale.sh -i -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
                
-               ##this worked >>>
-                # host = 'c220g1-031114.wisc.cloudlab.us' 
-                # username = 'shared'         
-                # ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd] 
-                # ssh_args[-1] = cmd
-                # command_string = ' '.join(ssh_args)
-                
                 ssh_args = getSSH(cluster)
-                ssh_args[-1] = cmd
+                host = ssh_args[-2]
+                ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{host}',cmd] 
                 command_string = ' '.join(ssh_args)
-                
-                ret = subprocess.run(command_string, capture_output=True,shell = True,executable='/bin/bash',text=True,check=True) #executable='/bin/bash'
+               
+                ret = subprocess.run(command_string,capture_output=True, text=True, check=True,executable='/bin/bash', shell=True)
                 ret = ret.stdout
                 print("avah ret is ",ret)
                 print("im here after the command")

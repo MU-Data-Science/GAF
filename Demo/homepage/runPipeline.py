@@ -14,14 +14,54 @@ from django_lock import lock
 import sys 
 
 
+def getSSH(cluster):
+    cmd = ''
+    #cluster = "cloudlab"
+    if cluster == "cl1":
+        #demo1
+        host = 'clnode001.clemson.cloudlab.us'  
+        username = 'shared'
+        cmd = ""          
+        ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
+    elif cluster == "cl2": 
+        #demo2
+        host = 'clnode029.clemson.cloudlab.us'  
+        username = 'shared'
+        cmd = ""          
+        ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
+    elif cluster == "cl3":  
+        #demo3
+        host = 'clnode051.clemson.cloudlab.us'
+        username = 'shared'
+        cmd = ""          
+        ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
+       
+    return ssh_args
+
 def pipelinerun():
     
-    cmd = '/users/shared/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'
-    host = 'c220g1-031114.wisc.cloudlab.us' 
-    username = 'shared'  
-    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd] 
+    # cmd = '/users/shared/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'
+    # host = 'c220g1-031114.wisc.cloudlab.us' 
+    # username = 'shared'  
+    # ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd] 
+    # command_string = ' '.join(ssh_args)
+    # ret = subprocess.run(command_string, capture_output=True,shell = True,executable='/bin/bash',text=True,check=True) 
+    # ret = ret.stdout
+    # print("avah ret is ",ret)
+    # print("im here after the command")      
+    
+    cluster = "cl1"
+    cmd = '/users/shared/AVAH/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
+    ssh_args = getSSH(cluster)
+    host = ssh_args[-2]
+    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{host}',cmd] 
     command_string = ' '.join(ssh_args)
-    ret = subprocess.run(command_string, capture_output=True,shell = True,executable='/bin/bash',text=True,check=True) 
-    ret = ret.stdout
-    print("avah ret is ",ret)
-    print("im here after the command")      
+    
+    ret = subprocess.run(command_string,capture_output=True, text=True, check=True,executable='/bin/bash', shell=True)
+    
+    output = ret.stdout
+    #err = ret.stderr
+    print("out is ",output)
+    
+
+  
