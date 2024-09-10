@@ -1,10 +1,1 @@
 uuid,userName,cluster,genome,BAM,BWAMarkDuplicates,SortSam,GATK_BQSR,GATK_HaplotypeCaller,vcf,link
-a72f,,cl3,ERR016320,0,0,0,0,0,0,
-a72f,,cl3,ERR016326,0,0,0,0,0,0,
-a72f,,cl3,ERR018204,0,0,0,0,0,0,
-a700,,cl2,ERR016314,0,0,0,0,0,0,
-a700,,cl2,ERR016316,0,0,0,0,0,0,
-a700,,cl2,ERR016320,0,0,0,0,0,0,
-a700,,cl2,ERR016326,0,0,0,0,0,0,
-b187,,cl2,ERR016314,0,0,0,0,0,0,
-b187,,cl2,ERR016320,0,0,0,0,0,0,

@@ -165,7 +165,7 @@ def getSSH(cluster):
     #cluster = "cloudlab"
     if cluster == "cl1":
         #demo1
-        host = 'clnode030.clemson.cloudlab.us' 
+        host = 'clnode001.clemson.cloudlab.us'  
         username = 'shared'
         cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
@@ -516,7 +516,7 @@ def execute_command_view(request):
         #adding genome names and user email 
         genomeNames = "<<EOF\n"
         for size, genome in zip(genomeSizes,genomeList):
-            genomeNames+= genome+'-'+email+"\n"
+            genomeNames+= genome+'-'+uuid+"\n"
         genomeNames+="EOF"
         
  
@@ -524,7 +524,6 @@ def execute_command_view(request):
         ssh_args[-1] = cmd  
         ret = checkAvahRunning(ssh_args)
         print("check avah running output is ",ret)
-    
             
     
         if ret.find("true") != -1:
@@ -696,11 +695,26 @@ def execute_command_view(request):
                 ## export HADOOP_CONF_DIR="/mydata/hadoop/etc/hadoop"
                 ## export SPARK_HOME="/mydata/spark"
                 ## provide completet path for /mydata/spark/bin/spark-submit
+                
+                
+                ###if somatic run AVAH-FABRIC 
+                ###if cloudlab no gpu and germline run AVAH 
+                ###if gpu run on fabric (select the fabric script after testing - Ajay)
+                
                 cmd = '/users/ks9dw/AVAH/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 16 -b 2 -p 1 -P H -G'
                 cmd = '/users/shared/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
-                host = 'c220g1-031114.wisc.cloudlab.us' 
-                username = 'shared'         
-                ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd] 
+                
+                
+                cmd = '/users/shared/AVAH/scripts/run_variant_analysis_at_scale.sh -i -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
+               
+               ##this worked >>>
+                # host = 'c220g1-031114.wisc.cloudlab.us' 
+                # username = 'shared'         
+                # ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd] 
+                # ssh_args[-1] = cmd
+                # command_string = ' '.join(ssh_args)
+                
+                ssh_args = getSSH(cluster)
                 ssh_args[-1] = cmd
                 command_string = ' '.join(ssh_args)
                 
