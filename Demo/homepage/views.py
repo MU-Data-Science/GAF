@@ -704,7 +704,7 @@ def execute_command_view(request):
                 cmd = '/users/shared/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
                 
                 
-                cmd = '/users/shared/AVAH/scripts/run_variant_analysis_at_scale.sh -i -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
+                cmd = '/users/shared/AVAH/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
                
                 ssh_args = getSSH(cluster)
                 host = ssh_args[-2]
