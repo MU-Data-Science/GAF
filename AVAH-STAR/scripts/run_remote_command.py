@@ -114,6 +114,7 @@ def usage(prog_name):
     print(" grep    - grep log files of all worker nodes")
     print("     <arg1>   - pattern")
     print("     <arg2>   - log directory")
+    print("example command : python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py grep 5 ‘Completed’ /mydata/hadoop/users/logs")
     print("")
     print(" set_mtu - set MTU value on all nodes")
     print("     <arg1>   - MTU value (e.g., 9000)")
