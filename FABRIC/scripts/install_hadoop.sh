@@ -23,7 +23,7 @@ do
 	ssh -o "StrictHostKeyChecking no" $ip "$remote_command"
 done
 
-wget https://archive.apache.org/dist/hadoop/core/hadoop-$hadoop_ver.$hadoop_sub_ver/hadoop-$hadoop_ver.$hadoop_sub_ver.tar.gz -P $DATA_DIR > /dev/null 2>&1
+wget https://archive.apache.org/dist/hadoop/core/hadoop-$hadoop_version.$hadoop_sub_version/hadoop-$hadoop_version.$hadoop_sub_version.tar.gz -P $DATA_DIR > /dev/null 2>&1
 
 echo "Hadoop download on master node complete"
 
