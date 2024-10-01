@@ -16,7 +16,7 @@ Step one loades the Fablib library and list sites and their availability of GPUs
   - Wait for the slice submit to finish successfully
   - Run Step 3 block to setup ssh, worker ips 
   - Extend the slice from `Step 4` or navigate to `Fabric Portal` > `Experiments` > `My Slices` > `your experiment` and you should be able to see `Lease End at` option to extend the lease. 
-
+ - While setting up the cluster, make sure you have `nat64.sh` file in ~/work directory of fabric jupyter notebook, if not exits, copy it from ~/GAF/FABRIC/scripts/nat64.sh.
 4. To setup Hadoop, Spark, and other tools, execute the following in the shell/terminal. Suppose your cluster has 16 nodes on vm0.
   ```
       screen -S setup
