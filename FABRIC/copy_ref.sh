@@ -37,3 +37,18 @@ do
         fi
 
 done
+
+
+
+
+#alternative code
+##!/bin/bash
+
+# Array of VM IP addresses or hostnames
+#vms=("vm1" "vm2" "vm3" "vm4" "vm5" "vm6" "vm7")
+
+# Loop over the VMs
+#for vm in "${vms[@]}"; do
+  # Use scp to copy the files
+ # scp /mydata/hs38.*  ubuntu@$vm:/mydata
+#done
