@@ -72,7 +72,8 @@ In the same file change <values> for following properties.
   - Nine reference files are needed to run the GATK pipeline. To copy these files from the master (vm0) to the worker nodes it is assumed that the files are already in the mydata folder of the master. To copy the files to the workers run the following script inside of the GAF folder:  
   - Ensure following files are present in `/mydata` before running the command below:
   - Link for ref genome: [click here](https://mailmissouri-my.sharepoint.com/:u:/g/personal/raopr_umsystem_edu/EcAAl7ea7kJGiVzbMuI5XicBOq2jEXeLN38rL8NSqii5HQ?e=8njtmq)
-  - Or transfer using scp from cloudlab to fabric cluster. 
+  - Or transfer using scp from cloudlab to fabric cluster.
+  - Copy all hs38* files to worker nodes using `copy_ref.sh`.
  ```
  hs38.dict
  hs38.fa.amb
