@@ -41,7 +41,7 @@ scripts=("nvme_config" \
 	"install_utils" \
 	"install_gpu_driver" \
 	"install_parabricks" \
-	"gpu_reboot" \
+#	"gpu_reboot" \
 	"GPU_IPv4_access")
 
 pid=""
