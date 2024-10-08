@@ -439,21 +439,35 @@ async function showClusters(){
     });
     
     const button = document.createElement("button");
-    button.innerHTML = 'View Resource Usage';
+    button.innerHTML = 'View Cloudlab Resource Usage';
     button.classList.add("btn");
     button.classList.add("hover-effect");
-    button.id = "resourceAvlb";
+    button.style.display = "inline-block";
+    button.style.width = "49%";
+    button.id = "resourceAvlb1";
     button.setAttribute('btn-data','resourceBtn');
-    selectionOptions3.appendChild(button);
-    
+
     const button2 = document.createElement("button");
-    button2.innerHTML = 'Auto Select';
-    button2.id = "autoBtnID";
+    button2.innerHTML = 'View Fabric Resource Usage';
     button2.classList.add("btn");
     button2.classList.add("hover-effect");
-    selectionOptions3.appendChild(button2);
+    button2.style.display = "inline-block";
+    button2.style.width = "49%";
+    button2.style.float = "right";
+    button2.id = "resourceAvlb2";
+    button2.setAttribute('btn-data','resourceBtn');
 
-    const resourceAvlb = document.getElementById('resourceAvlb');
+    selectionOptions3.appendChild(button);
+    selectionOptions3.appendChild(button2);
+    
+    const button3 = document.createElement("button");
+    button3.innerHTML = 'Auto Select';
+    button3.id = "autoBtnID";
+    button3.classList.add("btn");
+    button3.classList.add("hover-effect");
+    selectionOptions3.appendChild(button3);
+
+    const resourceAvlb = document.getElementById('resourceAvlb1');
     resourceAvlb.addEventListener('click', function(event) { 
             const externalURL = 'http://clnode221.clemson.cloudlab.us:3000/d/fdafc397-6177-4291-86d0-73abf671501/all-clusters-overview?orgId=1&refresh=5s'; 
             window.open(externalURL, '_blank');
@@ -566,10 +580,13 @@ function displayPhyloTree(){
     imgDiv.style.left = '40%';
     imgDiv.style.top = '40%';
 
-    animationPath = "/static/images/animate.gif";
+    var animationPath = "/static/images/animate.gif";
     var animationImg = document.createElement('img');
     animationImg.style.width = "400px";
     animationImg.src = animationPath;
+
+    imgDiv.appendChild(animationImg);
+    newWindow.document.body.appendChild(imgDiv);
 
     // const customData = {
     //     pipeline,
@@ -597,34 +614,54 @@ function displayPhyloTree(){
     //      processPhyloTree();
     //     event.preventDefault();
 
-    newWindow.document.body.appendChild(imgDiv);
-    imgDiv.appendChild(animationImg);
-
     setTimeout(function() {
-        console.log("im inside the timeout");
-        var treeImg = document.createElement('img');
-        var treeImgPath = "/static/images/phylogeny.png"; 
-        treeImg.src = treeImgPath;
-        treeImg.style.width = '1000px';
-        treeImg.style.height = '1000px';
-
-        imgDiv.style.position = '';
-        imgDiv.style.left = '';
-        imgDiv.style.top = '';
-        
- 
-        imgDiv.removeChild(animationImg);
-        imgDiv.appendChild(treeImg);
-
-    }, 25000); // 5000 milliseconds = 5 seconds
-
-    console.log("skipped timeout block");
-
-    //newWindow.document.body.appendChild(treeImg);
-    //clusterDiv.appendChild(treeImg);
+        checkPhyloImage(imgDiv,animationImg);
+    }, 2500); // 5000 milliseconds = 5 seconds
 
 }//end func
 
+function checkPhyloImage(imgDiv,animationImg){
+
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const customData = {
+           cluster
+        };    
+    fetch('/checkPhyloTreeImg/',{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json', 
+            'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify(customData),
+    })  
+    .then(response => response.json())
+    .then(data => {
+        result = JSON.parse(data.result);
+        console.log("result from server is")
+        console.log(result);
+        console.log(typeof result);
+    }) 
+
+    // if(result === true){
+        console.log("im inside the true");
+        var treeImg = document.createElement('img');
+        var treeImgPath = "/static/images/cl1phylogeny_tree.png"; 
+        treeImg.src = treeImgPath;
+        treeImg.style.width = '1000px';
+        treeImg.style.height = '1000px';
+        
+        imgDiv.style.position = '';
+        imgDiv.style.left = '';
+        imgDiv.style.top = '';
+        imgDiv.removeChild(animationImg);
+        imgDiv.appendChild(treeImg);
+        console.log("updated the new image");
+        console.log("imgDiv is : ",imgDiv);
+    // }
+    // else{
+    //     console.log("true block faield");
+    // }
+}
 
 function checkFiles(){
     //call the end point to check for vcfs in hdfs

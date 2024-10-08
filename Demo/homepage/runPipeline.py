@@ -40,26 +40,9 @@ def getSSH(cluster):
 
 def pipelinerun():
     
-    # cmd = '/users/shared/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'
-    # host = 'c220g1-031114.wisc.cloudlab.us' 
-    # username = 'shared'  
-    # ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd] 
-    # command_string = ' '.join(ssh_args)
-    # ret = subprocess.run(command_string, capture_output=True,shell = True,executable='/bin/bash',text=True,check=True) 
-    # ret = ret.stdout
-    # print("avah ret is ",ret)
-    # print("im here after the command")      
-    
     cluster = "cl1"
-    # cmd = '/users/shared/AVAH/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
-    # ssh_args = getSSH(cluster)
-    # host = ssh_args[-2]
-    # ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{host}',cmd] 
-    # command_string = ' '.join(ssh_args)
     
-    # ret = subprocess.run(command_string,capture_output=True, text=True, check=True,executable='/bin/bash', shell=True)
-    
-    cmd = '/users/shared/AVAH/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
+    cmd = '/users/shared/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
                
     ssh_args = getSSH(cluster)
     host = ssh_args[-2]

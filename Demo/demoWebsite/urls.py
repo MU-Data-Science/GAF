@@ -24,6 +24,7 @@ urlpatterns = [
     path('__debug__/',include(debug_toolbar.urls)),
     path('',views.execute_command_view, name='execute_command'),
     path('checkFiles/',views.checkFiles, name='execute_command'),
+    path('checkPhyloTreeImg/',views.checkPhyloTreeImg, name='execute_command'),
     path('getClusterUtilisations/',views.getClusterUtilisations),
     path('playground/',include('playground.urls'))
 ]

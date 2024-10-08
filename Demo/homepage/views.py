@@ -160,12 +160,12 @@ def autoSelectCluster():
     return cluster 
 
 def getSSH(cluster):
-    
+    ssh_args = []
     cmd = ''
     #cluster = "cloudlab"
     if cluster == "cl1":
         #demo1
-        host = 'clnode001.clemson.cloudlab.us'  
+        host = 'c220g5-111210.wisc.cloudlab.us' 
         username = 'shared'
         cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
@@ -215,7 +215,7 @@ def checkAvahRunning(ssh_args):
 logger = logging.getLogger(__name__)
 
 def cronFunc(): 
-    host = 'clnode001.clemson.cloudlab.us' 
+    host = 'c220g5-111210.wisc.cloudlab.us'  
     username = 'shared'        
     
     #1- read all the logs and update record for stages 
@@ -389,22 +389,18 @@ def processPhyloTree(request):
     uuid = uuid[:4]
     genomeList = json_data.get('genomeList')
     cluster = json_data.get('cluster')
+    numGenomes = len(genomeList)
     
-def processPhyloTree():
-    
-    genomeListSize = 5
-    cluster = 1
-
+    cluster = "cl1"
     ssh_args = getSSH(cluster)
+    
     cmd = 'ls /mydata/NSF-CC-GAF/post-vcf-pipeline/data/*vcf | wc -l'    
     ssh_args[-1] = cmd
     command_string = ' '.join(ssh_args)
     ret = subprocess.run(command_string, capture_output=True,shell = True,executable='/bin/bash',text=True,check=True) #executable='/bin/bash'
     ret = ret.stdout
-
-    print("command output is ",ret)
     
-    if int(ret) == genomeListSize:
+    if int(ret) == numGenomes:
         #print("fetching phylogeny tree")
        #cmd = "scp {}:/mydata/{} /home/ubuntu/GAF/Demo/homepage".format(username_host,vcf)
         #result = subprocess.run(cmd, capture_output=True, text=True, check=True, shell = True) 
@@ -416,8 +412,38 @@ def processPhyloTree():
         print("execute bash output is ",ret)
         ret = ret.stderr 
         print("execute bash error is ",ret)
+    
+    
+@lock("global")    
+def checkPhyloTreeImg(cluster):
+    c = cluster 
+    cluster = "cl1" 
+    ssh_args = getSSH(cluster)
+    cmd = '[ -f "/mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/phylogeny_tree.png" ] && echo "1" || echo "0"'
+    ssh_args[-1] = cmd
+    command_string = ' '.join(ssh_args)
+    print("command is : ",command_string)
+    ret = subprocess.run(command_string, capture_output=True,shell = True,executable='/bin/bash',text=True,check=True) #executable='/bin/bash'
+    ret = ret.stdout
+    print("ret is : ",ret)
+    if int(ret) == 1:
+        print("file found")
+        cmd = f"cp /mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/phylogeny_tree.png /mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/{cluster}phylogeny_tree.png"
+        ssh_args[-1] = cmd
+        command_string = ' '.join(ssh_args)
+        ret = subprocess.run(command_string, capture_output=True,shell = True,executable='/bin/bash',text=True,check=True) #executable='/bin/bash'
+        ret = ret.stdout
+        print("file renamed")
+
+        username_host = ssh_args[-2]
+        cmd = "scp {}:/mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/{}phylogeny_tree.png /home/ubuntu/GAF/Demo/homepage/static/images".format(username_host,cluster)
+        subprocess.run(cmd, capture_output=True, text=True, check=True, shell = True) 
+        print("file copied to django")
         
-        
+        return JsonResponse({'result':"true"})
+    else:
+        return JsonResponse({'result':"false"})
+    
 
 def run_single_node():
             host = 'c220g2-010802.wisc.cloudlab.us'  
@@ -689,6 +715,7 @@ def execute_command_view(request):
                 
                 #run pipeline 
                 
+                ##run avah fabric for stages check 
                 ## modify the run_variant_analysis_scale.sh 
                 ## export HADOOP_HOME="/mydata/hadoop"
                 ## export HADOOP_CONF_DIR="/mydata/hadoop/etc/hadoop"
@@ -700,11 +727,7 @@ def execute_command_view(request):
                 ###if cloudlab no gpu and germline run AVAH 
                 ###if gpu run on fabric (select the fabric script after testing - Ajay)
                 
-                cmd = '/users/ks9dw/AVAH/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/main.txt -d NONE -n 16 -b 2 -p 1 -P H -G'
                 cmd = '/users/shared/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
-                
-                
-                cmd = '/users/shared/AVAH/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
                
                 ssh_args = getSSH(cluster)
                 host = ssh_args[-2]
