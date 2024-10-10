@@ -46,13 +46,13 @@ Step 1: Download the latest version.
     $ unzip snpEff_latest_core.zip
     
 Note: Make sure you have compatible java version for SnpEff, on oct10th2024 Java 21 (updated JRE included) version works good.
-Commands to install:
- `$ sudo apt update`
- `$ sudo apt upgrade -y`
- `$ apt search openjdk`
- `$ sudo apt install openjdk-21-jdk-headless -y`
+Commands to install:  
+ `$ sudo apt update`  
+ `$ sudo apt upgrade -y`  
+ `$ apt search openjdk`  
+ `$ sudo apt install openjdk-21-jdk-headless -y`  
 
-Step 2: Download SnpEff databases
+Step 2: Download SnpEff databases  
 
     $ cd /mydata/GAF/VariantKG/codebase/snpEff
     $ java -jar snpEff.jar download GRCh38.86
