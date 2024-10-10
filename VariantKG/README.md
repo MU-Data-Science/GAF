@@ -87,7 +87,8 @@ Step 4: Build the Sparqling-genomics tool.
     $ cd /mydata/GAF/VariantKG/codebase/sparqling-genomics-0.99.11
     $ ./configure GUILD=/usr/bin/guild
 
-Use the 'locate' command to find the path for the GUILD package.
+Use the 'locate' command to find the path for the GUILD package. 
+`$ sudo apt install mlocate` #If locate is not installed, use this command
 
 Step 4: Once the configurations and installations are complete, make the following changes.
 
