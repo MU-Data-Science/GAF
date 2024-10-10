@@ -44,6 +44,13 @@ Step 1: Download the latest version.
     $ cd /mydata/GAF/VariantKG/codebase
     $ wget https://snpeff.blob.core.windows.net/versions/snpEff_latest_core.zip
     $ unzip snpEff_latest_core.zip
+    
+Note: Make sure you have compatible java version for SnpEff, on oct10th2024 Java 21 (updated JRE included) version works good.
+Commands to install:
+ `$ sudo apt update`
+ `$ sudo apt upgrade -y`
+ `$ apt search openjdk`
+ `$ sudo apt install openjdk-21-jdk-headless -y`
 
 Step 2: Download SnpEff databases
 
