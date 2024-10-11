@@ -42,15 +42,10 @@ To download the latest version of SnpEff and GRCh38.86, use the following steps 
 Step 1: Download the latest version.
 
     $ cd /mydata/GAF/VariantKG/codebase
-    $ wget https://snpeff.blob.core.windows.net/versions/snpEff_latest_core.zip
-    $ unzip snpEff_latest_core.zip
+    $ wget https://sourceforge.net/projects/snpeff/files/snpEff_v4_3t_core.zip
+    $ unzip snpEff_v4_3t_core.zip
     
-Note: Make sure you have compatible java version for SnpEff, on oct10th2024 Java 21 (updated JRE included) version works good.
-Commands to install:  
- `$ sudo apt update`  
- `$ sudo apt upgrade -y`  
- `$ apt search openjdk`  
- `$ sudo apt install openjdk-21-jdk-headless -y`  
+Note: This workflow and tool are dependent on the Ubuntu and JDK versions. It has been tested thoroughly with Ubuntu18 and JDK 17. 
 
 Step 2: Download SnpEff databases  
 
@@ -128,7 +123,7 @@ To run our tool, VariantKG, we recommend using Cloudlab and Visual Studio Code. 
     $ sudo apt-get install gcc-4.9
     $ sudo apt-get install --only-upgrade libstdc++6 -y
     $ pip3 install torch==2.2.0
-    $ pip3 install pymantic
+    $ pip3 install pymantic numpy==1.26.4
     $ pip3 install torch-geometric
     $ python3 gradio_app.py
 
