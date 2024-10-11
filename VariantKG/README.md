@@ -124,7 +124,7 @@ To run our tool, VariantKG, we recommend using Cloudlab and Visual Studio Code. 
     $ sudo apt-get install --only-upgrade libstdc++6 -y
     $ pip3 install torch==2.2.0
     $ pip3 install torchdata==0.7.1
-    $ pip3 install pymantic numpy==1.26.4
+    $ pip3 install pymantic numpy==1.26.4 matplotlib scikit-learn
     $ pip3 install torch-geometric
     $ python3 gradio_app.py
 

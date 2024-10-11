@@ -1,2 +1,2 @@
-gradio
+gradio==4.39.0
 ray
