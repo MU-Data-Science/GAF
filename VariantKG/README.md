@@ -120,7 +120,7 @@ Download the jar file:
 
 # Running VariantKG
 
-To run our tool, VariantKG, we recommend using Cloudlab. Once you have cloned the repository, please install SnpEff, vcf2rdf and Blazegraph and then navigate to VariantKG/codebase and run:
+To run our tool, VariantKG, we recommend using Cloudlab and Visual Studio Code. Once you have cloned the repository, please install SnpEff, vcf2rdf and Blazegraph and then navigate to VariantKG/codebase and run:
 
     $ cd /mydata/GAF/VariantKG/codebase
     $ pip3 install -r requirements.txt
@@ -132,7 +132,7 @@ To run our tool, VariantKG, we recommend using Cloudlab. Once you have cloned th
     $ pip3 install torch-geometric
     $ python3 gradio_app.py
 
-Open your browser (Safari or Chrome), and type the following:
+Add the port, in this case, 7865 to "Forwarding Ports" in VS Code. Then, open your browser (Safari or Chrome), and type the following:
 
     http://127.0.0.1:7865
 
