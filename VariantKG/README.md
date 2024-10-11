@@ -31,8 +31,8 @@ Step 3: Install the required packages:
     $ conda activate dglconda
     $ conda install -c dglteam dgl -y 
     $ sudo apt-get update
-    $ sudo apt install openjdk-11-jre-headless -y
-    $ sudo apt install openjdk-11-jre-headless gradle -y
+    $ sudo apt install openjdk-17-jre-headless -y
+    $ sudo apt install openjdk-17-jre-headless gradle -y
 
 Step 4: Clone the repository and navigate to the VariantKG folder.
 
