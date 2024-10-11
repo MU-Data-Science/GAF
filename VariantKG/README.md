@@ -123,14 +123,24 @@ To run our tool, VariantKG, we recommend using Cloudlab and Visual Studio Code. 
     $ sudo apt-get install gcc-4.9
     $ sudo apt-get install --only-upgrade libstdc++6 -y
     $ pip3 install torch==2.2.0
+    $ pip3 install torchdata==0.7.1
     $ pip3 install pymantic numpy==1.26.4
     $ pip3 install torch-geometric
     $ python3 gradio_app.py
 
-Add the port, in this case, 7865 to "Forwarding Ports" in VS Code. Then, open your browser (Safari or Chrome), and type the following:
+Add the port, in this case, 7865, to "Forwarding Ports" in VS Code. Then, open your browser (Safari or Chrome) and type the following:
 
     http://127.0.0.1:7865
 
 If your system's default setting is in dark mode and you prefer a light mode for the tool, use the following URL:
 
     http://127.0.0.1:7865/?__theme=light
+
+# DEBUGGING
+
+1. If you face an error like `ImportError: libssl.so.3: cannot open shared object file: No such file or directory`, it is because of the torchdata version.
+2. If you face an error on the JDK version for SnpEff, it will most likely be because of the version mismatch between Ubuntu and JDK.
+3. If you face an error with Gradio version, downgrade the version to 4.39.0 using:
+
+   $ pip3 install gradio==4.39.0
+   
