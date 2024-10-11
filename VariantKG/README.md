@@ -124,6 +124,7 @@ To run our tool, VariantKG, we recommend using Cloudlab. Once you have cloned th
 
     $ cd /mydata/GAF/VariantKG/codebase
     $ pip3 install -r requirements.txt
+    $ conda install -c dglteam dgl
     $ sudo apt-get install gcc-4.9
     $ sudo apt-get install --only-upgrade libstdc++6 -y
     $ pip3 install torch==2.2.0
