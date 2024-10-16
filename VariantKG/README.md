@@ -124,7 +124,7 @@ To run our tool, VariantKG, we recommend using Cloudlab and Visual Studio Code. 
     $ sudo apt-get install --only-upgrade libstdc++6 -y
     $ pip3 install torch==2.2.0
     $ pip3 install torchdata==0.7.1
-    $ pip3 install pymantic numpy==1.26.4 matplotlib scikit-learn
+    $ pip3 install pymantic numpy==1.26.4 matplotlib scikit-learn pyarrow
     $ pip3 install torch-geometric
     $ python3 gradio_app.py
 
@@ -135,6 +135,8 @@ Add the port, in this case, 7865, to "Forwarding Ports" in VS Code. Then, open y
 If your system's default setting is in dark mode and you prefer a light mode for the tool, use the following URL:
 
     http://127.0.0.1:7865/?__theme=light
+
+Please note: VariantKG takes unzipped VCF files as input.
 
 # DEBUGGING
 
