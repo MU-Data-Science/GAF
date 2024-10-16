@@ -6,6 +6,7 @@ from pymantic import sparql
 import requests
 from collections import OrderedDict
 from tqdm import tqdm
+from time import perf_counter_ns
 
 from input_dataclasses import GraphEnrichmentConfig
 import gradio as gr
@@ -15,6 +16,14 @@ from typing import List
 from constants import AGE_GROUP_FILTER_MAPPING
 
 logger = get_logger("enrich_graph")
+
+
+def run_query(url, headers, data, name):
+    start_time = perf_counter_ns()
+    result = requests.post(url, headers=headers, data=data)
+    stop_time = perf_counter_ns()
+    print(f"Time taken to execute {name} query: {(stop_time - start_time) * 1e-9} seconds")
+    return result
 
 def check_connection(config: GraphEnrichmentConfig) -> bool:
     url = f'http://{config.blazegraph_ip_address}:9999/blazegraph/sparql'
@@ -28,7 +37,7 @@ def check_connection(config: GraphEnrichmentConfig) -> bool:
     }
     
     try:
-        result_1 = requests.post(url, headers=headers, data=data_1)
+        result_1 = run_query(url, headers, data_1, "Check connection")
         return len(result_1.json()['results']['bindings']) == 1
     except Exception as e:
         print(e)
@@ -50,7 +59,8 @@ def fetch_accession_by_age_group(config: GraphEnrichmentConfig) -> List[str]:
     
     print(f"PREFIX wdt: <https://www.wikidata.org/wiki/> PREFIX sg: <sg://> SELECT DISTINCT ?accession_id WHERE {{ GRAPH ?accession_id {{ ?sraURL wdt:Q11904283 ?age . }} FILTER ( ({age_group_filter_str}) ) }}")
     
-    result = requests.post(url, headers=headers, data=data)
+    start_age_query
+    result = run_query(url, headers, data, "fetch by age filter")
     print(f"Fetching {len(result.json()['results']['bindings'])} accession IDs")
     
     accession_id_set = set()
@@ -76,7 +86,7 @@ def get_unique_accession_ids(config: GraphEnrichmentConfig) -> List[str]:
         'query': 'PREFIX sg_biohackathon:<http://biohackathon.org/resource/faldo#> SELECT DISTINCT ?accession_id WHERE { GRAPH ?accession_id { ?origin sg_biohackathon:reference ?chromosome . } } LIMIT 51',
     }
     
-    result = requests.post(url, headers=headers, data=data)
+    result = run_query(url, headers, data, "fetch unique accession ids")
 
     print(f"Fetching {len(result.json()['results']['bindings'])} accession IDs")
     
@@ -173,7 +183,7 @@ def get_chosen_features(config: GraphEnrichmentConfig, blazegraph_query: str, pr
     }
     # import pdb; pdb.set_trace()
     # progress(0.1, desc=query.replace("\n", "<br>"))
-    result = requests.post(url, headers=headers, data=data)
+    result = run_query(url, headers, data, "get features")
     logger.debug(f"👉 Finished fetching {len(result.json()['results']['bindings'])}")
 
     data_list = []

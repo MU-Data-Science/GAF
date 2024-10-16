@@ -2,7 +2,7 @@ VCF_FILE_UPLOADS_PATH = "/mydata/GAF/VariantKG/codebase/Uploads"
 SNPEFF_JAR_PATH = '/mydata/GAF/VariantKG/codebase/snpEff/snpEff.jar'
 SPARQLING_GEN_PATH = '/mydata/GAF/VariantKG/codebase/sparqling-genomics-0.99.11/tools/vcf2rdf/vcf2rdf'
 
-DEFAULT_BLAZEGRAPH_SERVER_IP = '10.10.1.1'
+DEFAULT_BLAZEGRAPH_SERVER_IP = 'localhost'
 DEFAULT_BLAZEGRAPH_INPUT_DIR = '/mydata/GAF/VariantKG/codebase/Processed'
 BLAZEGRAPH_JAR_PATH = '/mydata/GAF/VariantKG/codebase/blazegraph.jar'
 QUAD_PROPERTIES_PATH = '/mydata/GAF/VariantKG/codebase/quad.properties'

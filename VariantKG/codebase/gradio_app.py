@@ -4,6 +4,7 @@ import sys
 from input_dataclasses import GraphEnrichmentConfig, GraphCreationConfig, GraphTrainerConfig
 import pandas as pd
 import os
+from time import perf_counter_ns
 from constants import (
     VCF_FILE_UPLOADS_PATH,
     DEFAULT_BLAZEGRAPH_SERVER_IP,
@@ -95,6 +96,7 @@ def show_blazegraph_query():
 
 def upload_file(files, progress=gr.Progress()):
     global enrichment_config
+    total_start_time = perf_counter_ns()
     
     os.makedirs(VCF_FILE_UPLOADS_PATH, exist_ok=True)
     if isinstance(files, str):
@@ -117,6 +119,8 @@ def upload_file(files, progress=gr.Progress()):
     
     unique_accession_ids = get_unique_accession_ids(enrichment_config)
     enrichment_config.accession_ids = unique_accession_ids
+    total_stop_time = perf_counter_ns()
+    print(f"Total time taken to upload VCF file to Blazegraph: {((total_stop_time-total_start_time)*1e-9)} seconds")
     
     return gr.update(choices=unique_accession_ids, visible=False, value=[]), gr.update(visible=True, interactive=True),  gr.update(choices=feature_choices_custom, value=feature_choices_custom, visible=True), "Finished converting files and adding to Blazegraph!", gr.Tabs(selected=1)
 

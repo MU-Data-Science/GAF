@@ -11,7 +11,6 @@ from constants import (
 import gradio as gr
 from typing import List, Union
 
-
 def convert_to_nq_or_ttl(
     uploads_path: Union[str, List] = VCF_FILE_UPLOADS_PATH,
     progress: gr.Progress = None) -> List[str]:
