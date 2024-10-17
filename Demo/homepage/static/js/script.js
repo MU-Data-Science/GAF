@@ -11,7 +11,7 @@ const clusters = {
     selection: "Choose Cluster",
     options:[
         {text:"Cluster 1",value:'cl1'},
-        {text:"Cluster 2",value:'cl2'},
+        {text:"Cluster 2",value:'fcl1'},
         {text:"Cluster 3",value:'cl3'},
         // {text:"Cluster 4",value:'cl4'},
     ]

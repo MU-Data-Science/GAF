@@ -1,9 +1,1 @@
 uuid,userName,cluster,genome,BAM,BWAMarkDuplicates,SortSam,GATK_BQSR,GATK_HaplotypeCaller,vcf,link
-,,,TCR,1.0,,,,,,
-,,,TCR,1.0,,,,,,
-,,,TCR,1.0,,,,,,
-,,,TCR,,1.0,,,,,
-,,,TCR,,,1.0,,,,
-,,,TCR,,,,1.0,,,
-,,,TCR,1.0,,,,,,
-,,,TCR,,1.0,,,,,
