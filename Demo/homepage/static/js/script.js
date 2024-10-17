@@ -467,13 +467,18 @@ async function showClusters(){
     button3.classList.add("hover-effect");
     selectionOptions3.appendChild(button3);
 
-    const resourceAvlb = document.getElementById('resourceAvlb1');
-    resourceAvlb.addEventListener('click', function(event) { 
-            const externalURL = 'http://clnode221.clemson.cloudlab.us:3000/d/fdafc397-6177-4291-86d0-73abf671501/all-clusters-overview?orgId=1&refresh=5s'; 
+    const resourceAvlb1 = document.getElementById('resourceAvlb1');
+    resourceAvlb1.addEventListener('click', function(event) { 
+            const externalURL = 'http://ms0924.utah.cloudlab.us:3000/d/fdafc397-6177-4291-86d0-73abf6715010/clustermetrics?orgId=1&refresh=5s&var-cluster=demo1&from=1728492901226&to=1728493201226&viewPanel=1'; 
             window.open(externalURL, '_blank');
             event.preventDefault();
     });
-    
+    const resourceAvlb2 = document.getElementById('resourceAvlb2');
+    resourceAvlb2.addEventListener('click', function(event) { 
+            const externalURL = 'http://127.0.0.1:3000/d/fdafc397-6177-4291-86d0-73abf6715010/clustermetrics?orgId=1&refresh=5s&from=1728494279185&to=1728494579186&viewPanel=1'; 
+            window.open(externalURL, '_blank');
+            event.preventDefault();
+    });
 
     const nxtButton = document.createElement("button");
     nxtButton.innerHTML = "Next";
@@ -588,44 +593,19 @@ function displayPhyloTree(){
     imgDiv.appendChild(animationImg);
     newWindow.document.body.appendChild(imgDiv);
 
-    // const customData = {
-    //     pipeline,
-    //     genomeList,
-    //     cluster,
-    //     email,
-    //     genomeSizeList,
-    //     uuid,
-    //     accessionIDs
-    //     }; 
-    //     console.log("data sent for phylotree is ",customData);
-    //     fetch('', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json', 
-    //             'X-CSRFToken': csrftoken,
-    //         },
-    //         body: JSON.stringify(customData),
-    //     })
-    //     .then(response => response.text())
-    //     .then(data => { })
-    //     .catch(error => {
-    //     console.error('Error:', error);
-    //     });
-    //      processPhyloTree();
-    //     event.preventDefault();
-
     setTimeout(function() {
         checkPhyloImage(imgDiv,animationImg);
     }, 2500); // 5000 milliseconds = 5 seconds
 
 }//end func
 
-function checkPhyloImage(imgDiv,animationImg){
+async function checkPhyloImage(imgDiv,animationImg){
 
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const customData = {
-           cluster
-        };    
+           cluster  }; 
+    cluster = "cl1";
+ 
     fetch('/checkPhyloTreeImg/',{
         method: 'POST',
         headers: {
@@ -637,30 +617,25 @@ function checkPhyloImage(imgDiv,animationImg){
     .then(response => response.json())
     .then(data => {
         result = JSON.parse(data.result);
-        console.log("result from server is")
-        console.log(result);
-        console.log(typeof result);
+        if(result == true){
+            var treeImg = document.createElement('img');
+            var treeImgPath = `/static/images/${cluster}phylogeny.png`; 
+            treeImg.src = treeImgPath;
+            treeImg.style.width = 'auto';
+            treeImg.style.height = 'auto';
+            
+            imgDiv.style.position = '';
+            imgDiv.style.left = '';
+            imgDiv.style.top = '';
+            imgDiv.removeChild(animationImg);
+            imgDiv.appendChild(treeImg);
+            console.log("updated the new image");
+            console.log("imgDiv is : ",imgDiv);
+        }
+        else{
+            console.log("true block failed");
+        }
     }) 
-
-    // if(result === true){
-        console.log("im inside the true");
-        var treeImg = document.createElement('img');
-        var treeImgPath = "/static/images/cl1phylogeny_tree.png"; 
-        treeImg.src = treeImgPath;
-        treeImg.style.width = '1000px';
-        treeImg.style.height = '1000px';
-        
-        imgDiv.style.position = '';
-        imgDiv.style.left = '';
-        imgDiv.style.top = '';
-        imgDiv.removeChild(animationImg);
-        imgDiv.appendChild(treeImg);
-        console.log("updated the new image");
-        console.log("imgDiv is : ",imgDiv);
-    // }
-    // else{
-    //     console.log("true block faield");
-    // }
 }
 
 function checkFiles(){
@@ -743,8 +718,6 @@ function checkFiles(){
                 //sum stages to check progress 
                 //draw progress bars 
                     var stageSum = element['BAM'] + element['BWAMarkDuplicates'] + element['SortSam'] + element['GATK_BQSR'] + element['GATK_HaplotypeCaller'];
-                    
-
 
                     var label = document.createElement('label')
                     label.htmlFor = genomeName;
@@ -765,9 +738,6 @@ function checkFiles(){
                     progressBar.style.width = stageSum*20+"%";
                     
                     progressBar.innerHTML = stageSum*20+"%";
-                        
-                        
-                    
 
                     switch(stageSum){
                         case 1:

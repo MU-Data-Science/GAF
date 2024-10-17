@@ -57,5 +57,27 @@ def pipelinerun():
     #err = ret.stderr
     print("out is ",output)
     
+def testSSH(cluster):
+    ssh_args = []
+    if cluster == "cl1":
+        host = 'c220g5-111210.wisc.cloudlab.us'  
+        username = 'shared'
+        cmd = ""          
+        ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
+    elif cluster == "cl2": 
+    #demo2
+        host = 'clnode029.clemson.cloudlab.us'  
+        username = 'shared'
+        cmd = ""          
+        ssh_args = ['ssh', '-F', '~/.ssh/ssh_configAJ', '-i', '~/.ssh/slice_key','ubuntu@2605:2800:2011:201:f816:3eff:fe79:4025',cmd]
+    
 
-  
+    cmd = '"/mydata/hadoop/bin/hdfs dfs -test -e /TC*.retry && echo "1" || echo "0""'
+    ssh_args[-1] = cmd 
+    command_string = ' '.join(ssh_args)
+    ret = subprocess.run(command_string,capture_output=True, text=True, check=True,executable='/bin/bash', shell=True)
+    ret = ret.stdout
+    print("testSSH ret is ",ret)
+    print("username host is ",ssh_args[-2])
+    
+      

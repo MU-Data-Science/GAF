@@ -169,20 +169,34 @@ def getSSH(cluster):
         username = 'shared'
         cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
-    elif cluster == "cl2": 
-        #demo2
-        host = 'clnode029.clemson.cloudlab.us'  
-        username = 'shared'
+    elif cluster == "fcl1": 
+        #fabric
         cmd = ""          
-        ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
+        ssh_args = ['ssh', '-F', '~/.ssh/ssh_configAJ', '-i', '~/.ssh/slice_key','ubuntu@2605:2800:2011:201:f816:3eff:fe79:4025',cmd]
     elif cluster == "cl3":  
         #demo3
-        host = 'clnode051.clemson.cloudlab.us'
+        host = 'clnode045.clemson.cloudlab.us' 
         username = 'shared'
         cmd = ""          
         ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
        
     return ssh_args
+
+def getHomeAddress(cluster):
+    home = ''
+    if cluster == "cl1" or cluster == "cl3":
+        home = "/users/shared"
+    elif cluster == "fcl1":
+        home = "/home/ubuntu"
+    return home     
+
+def getFastqFilesPath(cluster):
+    filePath = ''
+    if cluster == "cl1" or cluster == "cl3":
+        home = "/proj/eva-public-PG0"
+    elif cluster == "fcl1":
+        home = "/home/ubuntu"
+    return filePath
 
 def getCommand(commandOptions):
     if commandOptions == 'gpuHigh':
@@ -215,86 +229,90 @@ def checkAvahRunning(ssh_args):
 logger = logging.getLogger(__name__)
 
 def cronFunc(): 
-    host = 'c220g5-111210.wisc.cloudlab.us'  
-    username = 'shared'        
+    
+    clusters = ["cl1","fcl1","cl3"]  
     
     #1- read all the logs and update record for stages 
-    
-    cmd = '/users/shared/cmd.sh'
     ## cmd.sh is a bash file
     # that contains the following 
     ## #!/usr/bin/env bash
-    ## /mydata/Anaconda3/bin/python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py grep 16 "Completed" /mydata/hadoop/logs/userlogs/ | grep -o "Completed-[^/]*" | grep "ERR018538"
-    ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',f'{username}@{host}',cmd]
-    command_string = ' '.join(ssh_args)
+    ## /mydata/Anaconda3/bin/python3 ${HOME}/AVAH-FABRIC/scripts/run_remote_command.py grep 16 "Completed" /mydata/hadoop/logs/userlogs/ | grep -o "Completed-[^/]*" | grep "ERR018538" 
     
-    try:
-        result = subprocess.run(command_string, capture_output=True,shell=True,executable='/bin/bash',text=True,check=True)
-        result = result.stdout.split()
-        if len(result) > 0:
-        #open the csv 
-            stages = ['BAM','BWAMarkDuplicates','SortSam','GATK_BQSR','GATK_HaplotypeCaller']
-            records = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv')
-            print("in new cron job")
-            for res in result:
-                resSplitted = res.split('-')
-                #print(" ")
-                #print("grep splits are : ",resSplitted)
-                
-                # fact we can see a stage here means stage is completed i.e, assign 1 
-                stage = resSplitted[1] 
-                #print('stage is : ',stage)
-                #id = resSplitted[2][:3]
-                #print("id is ",id)
-                split2 = resSplitted[2]
-                #print('split2 is ',split2)
-                uuid = split2[-4:] 
-                genome = split2[:-4] 
-                
-                #print('genome is : ',genome)
-                #print('uuid is : ',uuid)
-                
-                ##check if genome is already present in the record or not 
-                ## if present, then simply update its stages and vcf/link 
-                ## if not, add it 
-                ## add or update if our desired stage is reached
-                if stage in stages:
-                    ##if loc is 0, not found 
-                    loc = records[(records['genome'] == genome) & (records['uuid'] == uuid)]
-                    if len(loc)>0:
-                        #found 
-                        loc = loc.index[0]
-                        #print("genome present : updating stage")
-                        records.loc[loc,stage] = 1
-                        records.to_csv('/home/ubuntu/GAF/Demo/homepage/records.csv',index = False)
-                    else:
-                        #not found 
-                        #print("adding genome and stage")
-                        data = {'genome':genome, stage:1}  
-                        records.loc[len(records)] = data 
-                        records.to_csv('/home/ubuntu/GAF/Demo/homepage/records.csv',index = False)
-        else:
+    for cluster in clusters:
+        print("cron job for cluster : ",cluster)
+        ssh_args = getSSH(cluster)
+        home = getHomeAddress(cluster)
+        cmd = '{}/cmd.sh'.format(home)
+        ssh_args[-1] = cmd 
+        command_string = ' '.join(ssh_args)
+        try:
+            result = subprocess.run(command_string, capture_output=True,shell=True,executable='/bin/bash',text=True,check=True)
+            result = result.stdout.split()
+            if len(result) > 0:
+            #open the csv 
+                stages = ['BAM','BWAMarkDuplicates','SortSam','GATK_BQSR','GATK_HaplotypeCaller']
+                records = pd.read_csv('/home/ubuntu/GAF/Demo/homepage/records.csv')
+                print("updating records - have results")
+                for res in result:
+                    resSplitted = res.split('-')
+                    #print(" ")
+                    #print("grep splits are : ",resSplitted)
+                    
+                    # fact we can see a stage here means stage is completed i.e, assign 1 
+                    stage = resSplitted[1] 
+                    #print('stage is : ',stage)
+                    #id = resSplitted[2][:3]
+                    #print("id is ",id)
+                    split2 = resSplitted[2]
+                    #print('split2 is ',split2)
+                    uuid = split2[-4:] 
+                    genome = split2[:-4] 
+                    
+                    #print('genome is : ',genome)
+                    #print('uuid is : ',uuid)
+                    
+                    ##check if genome is already present in the record or not 
+                    ## if present, then simply update its stages and vcf/link 
+                    ## if not, add it 
+                    ## add or update if our desired stage is reached
+                    if stage in stages:
+                        ##if loc is 0, not found 
+                        loc = records[(records['genome'] == genome) & (records['uuid'] == uuid)]
+                        if len(loc)>0:
+                            #found 
+                            loc = loc.index[0]
+                            #print("genome present : updating stage")
+                            records.loc[loc,stage] = 1
+                            records.to_csv('/home/ubuntu/GAF/Demo/homepage/records.csv',index = False)
+                        else:
+                            #not found 
+                            #print("adding genome and stage")
+                            data = {'genome':genome, stage:1}  
+                            records.loc[len(records)] = data 
+                            records.to_csv('/home/ubuntu/GAF/Demo/homepage/records.csv',index = False)
+            else:
+                print("could not grep userLogs")
+                print("checking vcfs")
+                    
+        except subprocess.CalledProcessError as e:   
+            print('')
             print("could not grep userLogs")
-            print("checking vcfs")
-                
-    except subprocess.CalledProcessError as e:   
-        print('')
-        print("could not grep userLogs")
-        #print("Error Output:", e.stderr)
-        print('')
-    
-    #2- check hdfs for vcf files, upload and update 
-    ## read the old function (loop over all the files)
-    checkVCF()
+            #print("Error Output:", e.stderr)
+            print('')
+        
+        #2- check hdfs for vcf files, upload and update 
+        ## read the old function (loop over all the files)
+        checkVCF(ssh_args)
 
       
 
-def checkVCF(): 
-        username_host = 'shared@c220g1-031114.wisc.cloudlab.us' 
-        
+def checkVCF(ssh_args): 
+        #username_host = 'shared@c220g5-111210.wisc.cloudlab.us' 
+        print("im inside the checkVCF function")
         #check if vcf is present
         cmd = '/mydata/hadoop/bin/hdfs dfs -test -e /ERR*.vcf && echo "1" || echo "0"'
-        ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',username_host,cmd]
+        #ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',username_host,cmd]
+        ssh_args[-1] = cmd
         command_string = ' '.join(ssh_args)
         ret = subprocess.run(command_string, shell=True, executable='/bin/bash', capture_output=True, text=True, check=True)
         ret = ret.stdout
@@ -303,7 +321,8 @@ def checkVCF():
         if ret[0] == "1":
             print("vcf found")
             cmd = '/mydata/hadoop/bin/hdfs dfs -ls /*.vcf | grep -o "[^/[:space:]]*$"'
-            ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',username_host,cmd]
+            #ssh_args = ['ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'UserKnownHostsFile=/dev/null',username_host,cmd]
+            ssh_args[-1] = cmd
             command_string = ' '.join(ssh_args)
             ret = subprocess.run(command_string, shell=True, executable='/bin/bash', capture_output=True, text=True, check=True)
             vcfsList = ret.stdout.split()
@@ -326,7 +345,12 @@ def checkVCF():
                     ret = subprocess.run(command_string, shell=True, executable='/bin/bash', capture_output=True, text=True, check=True)
 
                     print("copying to server : ",vcf)
-                    cmd = "scp {}:/mydata/{} /home/ubuntu/GAF/Demo/homepage".format(username_host,vcf)
+                    #if cluster is on FABRIC
+                    if "f" in cluster:
+                        cmd = "scp -F ~/.ssh/ssh_configAJ -i ~/.ssh/slice_key ubuntu@\[2605:2800:2011:201:f816:3eff:fe79:4025\]:/mydata/{} .".format(vcf)
+                    else:
+                        cmd = "scp {}:/mydata/{} /home/ubuntu/GAF/Demo/homepage".format(ssh_args[-2],vcf)
+                        
                     result = subprocess.run(cmd, capture_output=True, text=True, check=True, shell = True) 
                     
                     print("uploading  ",vcf)
@@ -415,11 +439,12 @@ def processPhyloTree(request):
     
     
 @lock("global")    
-def checkPhyloTreeImg(cluster):
+def checkPhyloTreeImg(uuid):
     c = cluster 
+    uuid = uuid
     cluster = "cl1" 
     ssh_args = getSSH(cluster)
-    cmd = '[ -f "/mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/phylogeny_tree.png" ] && echo "1" || echo "0"'
+    cmd = '[ -f "/mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/phylogeny.png" ] && echo "1" || echo "0"'
     ssh_args[-1] = cmd
     command_string = ' '.join(ssh_args)
     print("command is : ",command_string)
@@ -428,7 +453,7 @@ def checkPhyloTreeImg(cluster):
     print("ret is : ",ret)
     if int(ret) == 1:
         print("file found")
-        cmd = f"cp /mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/phylogeny_tree.png /mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/{cluster}phylogeny_tree.png"
+        cmd = f"cp /mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/phylogeny.png /mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/{cluster}phylogeny.png"
         ssh_args[-1] = cmd
         command_string = ' '.join(ssh_args)
         ret = subprocess.run(command_string, capture_output=True,shell = True,executable='/bin/bash',text=True,check=True) #executable='/bin/bash'
@@ -436,7 +461,7 @@ def checkPhyloTreeImg(cluster):
         print("file renamed")
 
         username_host = ssh_args[-2]
-        cmd = "scp {}:/mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/{}phylogeny_tree.png /home/ubuntu/GAF/Demo/homepage/static/images".format(username_host,cluster)
+        cmd = "scp {}:/mydata/NSF-CC-GAF/post-vcf-pipeline/results/phylogeny/{}phylogeny.png /home/ubuntu/GAF/Demo/homepage/static/images".format(username_host,cluster)
         subprocess.run(cmd, capture_output=True, text=True, check=True, shell = True) 
         print("file copied to django")
         
@@ -545,7 +570,6 @@ def execute_command_view(request):
             genomeNames+= genome+'-'+uuid+"\n"
         genomeNames+="EOF"
         
- 
         cmd = '/mydata/hadoop/bin/yarn application -list | grep "Large-scale genome processing" | grep "RUNNING" && echo "true" || echo "false"'
         ssh_args[-1] = cmd  
         ret = checkAvahRunning(ssh_args)
@@ -620,58 +644,58 @@ def execute_command_view(request):
         else:
             #Pipeline is not running 
             print("pipeline not runnning so here we are!")
-
+            filePath = getFastqFilesPath(cluster)
             #write to secondary file
-            cmd = "sudo tee -a /proj/eva-public-PG0/{}secondary.txt {}".format(cluster,genomeMain)
+            cmd = "sudo tee -a {}/{}secondary.txt {}".format(filePath,cluster,genomeMain)
             ssh_args[-1] = cmd 
             out = executeCommand(ssh_args)
             print("writng to secondary file :",out)
             
-            cmd = "sudo cat /proj/eva-public-PG0/{}secondary.txt".format(cluster)
+            cmd = "sudo cat {}/{}secondary.txt".format(filePath,cluster)
             ssh_args[-1] = cmd
             out = executeCommand(ssh_args)
             print("secondary file is :",out)
             
             #old main is
-            cmd = "sudo cat /proj/eva-public-PG0/{}main.txt".format(cluster)
+            cmd = "sudo cat {}/{}main.txt".format(filePath,cluster)
             print(" main view command is ",cmd)
             ssh_args[-1] = cmd
             out = executeCommand(ssh_args)
             print("main file is :",out)
             
             #append to main file 
-            cmd = "sudo cat /proj/eva-public-PG0/{}secondary.txt >> /proj/eva-public-PG0/{}main.txt".format(cluster,cluster)
+            cmd = "sudo cat {}/{}secondary.txt >> {}/{}main.txt".format(filePath,filePath,cluster,cluster)
             print(" main append command is ",cmd)
             ssh_args[-1] = cmd 
             out = executeCommand(ssh_args)
             print("append to main file is :",out)
             
-            cmd = "sudo cat /proj/eva-public-PG0/{}main.txt".format(cluster)
+            cmd = "sudo cat {}/{}main.txt".format(filePath,cluster)
             ssh_args[-1] = cmd
             out = executeCommand(ssh_args)
             print("main file after append is :",out)
             
             
             #empty secondary file 
-            cmd = 'sudo sudo bash -c "> /proj/eva-public-PG0/{}secondary.txt"'.format(cluster)
+            cmd = 'sudo sudo bash -c "> {}/{}secondary.txt"'.format(filePath,cluster)
             ssh_args[-1] = cmd
             executeCommand(ssh_args)
             
             #check main file length (start job when we have 30 genomes job in queue)
-            cmd = "sudo cat /proj/eva-public-PG0/{}main.txt | wc -l".format(cluster)
+            cmd = "sudo cat {}/{}main.txt | wc -l".format(filePath,cluster)
             ssh_args[-1] = cmd 
             out = int(executeCommand(ssh_args))
             
             # print("exiting the function forcefully")
             # return
-            if out > 10:
+            if out > 5:
                 print("got enough sequences to run job!")
                 # #empty main genome file 
                 # cmd = 'sudo bash -c "> /proj/eva-public-PG0/main.txt"'
                 # ssh_args[-1] = cmd
                 # #executeCommand(ssh_args)
 
-                cmd = "cat /proj/eva-public-PG0/{}main.txt".format(cluster)
+                cmd = "cat {}/{}main.txt".format(filePath,cluster)
                 ssh_args[-1] = cmd
                 names = executeCommand(ssh_args)
                 splits = list(names.split())
@@ -727,7 +751,12 @@ def execute_command_view(request):
                 ###if cloudlab no gpu and germline run AVAH 
                 ###if gpu run on fabric (select the fabric script after testing - Ajay)
                 
-                cmd = '/users/shared/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P H -G'.format(cluster)
+                home = getHomeAddress(cluster)
+                if "f" in cluster:
+                    #fabric command 
+                    cmd = '{}/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /mydata/{}main.txt -d NONE -n 8 -b 2 -p 3 -P H -S -G'.format(home,cluster)
+                else:       
+                    cmd = '{}/AVAH-FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/{}main.txt -d NONE -n 8 -b 2 -p 2 -P S -G'.format(home,cluster)
                
                 ssh_args = getSSH(cluster)
                 host = ssh_args[-2]
