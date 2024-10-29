@@ -498,7 +498,7 @@ with gr.Blocks(js=js_func) as demo:
             with gr.Row():
                 model_selection = gr.Dropdown(
                     label="Select model",
-                    choices=['GraphSAGE', 'Graph Convolutional Network']
+                    choices=['GraphSAGE', 'Graph Convolutional Network','GraphTransformer']
                 )
             with gr.Row():
                 number_of_layers = gr.Slider(
