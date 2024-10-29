@@ -23,6 +23,10 @@ import pickle
 import json
 from input_dataclasses import GraphTrainerConfig
 from local_utils import get_logger
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from dgl.nn.pytorch import GATConv
 
 
 logger = get_logger("train_model")
@@ -57,6 +61,38 @@ class GraphSAGE(nn.Module):
                 x = self.dropout(x)
         
         return x
+
+
+
+class GraphTransformer(nn.Module):
+    num_heads = 1
+    def __init__(self, in_feats, h_feats, num_classes, num_layers, num_heads, dropout_rate):
+        super(GraphTransformer, self).__init__()
+        self.layers = torch.nn.ModuleList()
+        # Input layer
+        self.layers.append(GATConv(in_feats, h_feats, num_heads))
+        
+        # Hidden layers
+        for _ in range(num_layers - 2):
+            self.layers.append(GATConv(h_feats * num_heads, h_feats, num_heads))
+        
+        # Output layer
+        self.layers.append(GATConv(h_feats * num_heads, num_classes, 1))
+        
+        self.dropout_rate = dropout_rate
+        if self.dropout_rate > 0.0:
+            self.dropout = nn.Dropout(dropout_rate)
+
+    def forward(self, g, in_feat):
+        x = in_feat
+        for i, layer in enumerate(self.layers):
+            x = layer(g, x).flatten(1) if i != len(self.layers) - 1 else layer(g, x).mean(1)
+            if i != len(self.layers) - 1:
+                x = F.relu(x)
+                if self.dropout_rate > 0.0:
+                    x = self.dropout(x)
+        return x
+
 
 class GCN(nn.Module):
     def __init__(self, in_feats, h_feats, num_classes, num_layers, dropout_rate):
@@ -157,11 +193,21 @@ def run(config: GraphTrainerConfig):
     logger.debug(g)
     logger.debug(g.is_homogeneous)
     
-    if config.model_selection == 'sage':
+    if config.model_selection == 'GraphSAGE':
         # Instantiate SAGEConv model
+        print("GraphSAGE selected")
         model = GraphSAGE(g.ndata['feat'].shape[1], config.number_of_hidden_layers, config.number_of_classes, config.number_of_layers, config.dropout_rate)
-    else:
+    elif config.model_selection == 'GCN':
+        # Instantiate GraphConv model
+        print("GCN selected")
         model = GCN(g.ndata['feat'].shape[1], config.number_of_hidden_layers, config.number_of_classes, config.number_of_layers, config.dropout_rate)
+    elif config.model_selection == 'GraphTransformer':
+        # Instantiate GraphConv model
+        print("GraphTransformer selected")
+        model = GraphTransformer(g.ndata['feat'].shape[1], config.number_of_hidden_layers, config.number_of_classes, config.number_of_layers,1, config.dropout_rate)
+    else:
+        print("Invalid model selection")
+       
     logger.debug(model)
     # Call model training function
     train(g, model, config)
