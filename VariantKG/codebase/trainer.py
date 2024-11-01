@@ -197,7 +197,7 @@ def run(config: GraphTrainerConfig):
         # Instantiate SAGEConv model
         print("GraphSAGE selected")
         model = GraphSAGE(g.ndata['feat'].shape[1], config.number_of_hidden_layers, config.number_of_classes, config.number_of_layers, config.dropout_rate)
-    elif config.model_selection == 'GCN':
+    elif config.model_selection == 'Graph Convolutional Network':
         # Instantiate GraphConv model
         print("GCN selected")
         model = GCN(g.ndata['feat'].shape[1], config.number_of_hidden_layers, config.number_of_classes, config.number_of_layers, config.dropout_rate)
