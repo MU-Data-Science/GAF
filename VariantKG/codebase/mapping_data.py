@@ -53,7 +53,7 @@ def map_data(config: GraphCreationConfig, progress: gr.Progress):
 
     variant_id_feats_df = pd.read_parquet(variant_df_path)
     origin_id_feats_df = pd.read_parquet(origin_df_path)
-
+    
     logger.debug(f'Before mapping: \n {origin_id_feats_df}')
     
     map_dict = {}
@@ -67,7 +67,7 @@ def map_data(config: GraphCreationConfig, progress: gr.Progress):
             categorical_mapping = origin_id_feats_df[col].astype('category')
             origin_id_feats_df[col] = categorical_mapping.cat.codes
             map_dict[col] = {v:k for k,v in dict(enumerate(categorical_mapping.cat.categories)).items()}
-    
+    # import pdb; pdb.set_trace()
     # print(f'DEBUG --------- {map_dict["variant_id"]["None"]}')
 
     origin_id_feats_df.sort_values('origin', inplace=True)
@@ -102,6 +102,12 @@ def map_data(config: GraphCreationConfig, progress: gr.Progress):
             destinations = list(v.keys())
             for item in zip([k] * len(destinations), destinations):
                 unique_edges.add(tuple(sorted(item)))
+        # import pdb; pdb.set_trace()
+        #if unique_edges is empty break it and return message
+        if not unique_edges:
+            print("No edges found for the given edge type")
+            print("Please check the vcf file size, some files must not be having enough data")
+            print(r"Please run: find /path/to/your/directory -type f -size -1M -exec rm {} \;")
         origin_nodes, dest_nodes = zip(*unique_edges)
         new_edges_df = pd.DataFrame({
             'origin': origin_nodes,
@@ -131,7 +137,7 @@ def map_data(config: GraphCreationConfig, progress: gr.Progress):
     progress(0, desc="Saving node features")
     node_feat_path = f'{PATH_TO_SAVE_FILES}/node_features.parquet'
     origin_id_feats_df.to_parquet(node_feat_path, index=False)
-    
+    import pdb; pdb.set_trace()
     return node_feat_path, edge_feat_path, PATH_TO_SAVE_FILES, total_selected_len
 
 # node_feat_path, edge_feat_path, PATH_TO_SAVE_FILES = map_data('/mydata/dgl/general/Code/Data/')
