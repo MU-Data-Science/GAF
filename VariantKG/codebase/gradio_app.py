@@ -15,6 +15,9 @@ from constants import (
     AGE_GROUP_FILTER_MAPPING,
     POSSIBLE_CLASS_LABELS
 )
+import gradio as gr
+from PIL import Image
+import glob
 from create_graph import create_graph
 from feature_generator import get_chosen_features, get_unique_accession_ids, check_connection, create_query_for_chosen_features
 import json
@@ -25,7 +28,11 @@ from process_uploads import convert_to_nq_or_ttl
 from graph_storage import start_blazegraph, store_data_on_blazegraph
 from get_confusion_matrix import draw_confusion_matrix
 from string import Template
-
+import warnings
+import altair as alt
+import pandas as pd
+from GNNExplainer import main
+warnings.filterwarnings("ignore")
 js_func = """
 function refresh() {
     const url = new URL(window.location);
@@ -120,7 +127,7 @@ def upload_file(files, progress=gr.Progress()):
     unique_accession_ids = get_unique_accession_ids(enrichment_config)
     enrichment_config.accession_ids = unique_accession_ids
     total_stop_time = perf_counter_ns()
-    print(f"Total time taken to upload VCF file to Blazegraph: {((total_stop_time-total_start_time)*1e-9)} seconds")
+    print(f"Total time taken to upload VCFs, perform annotation on vcf, converting into N3 and then converting into NQ After that file uploads into Blazegraph (upload vcf to vcfs in blazegraph): {((total_stop_time-total_start_time)*1e-9)} seconds")
     
     return gr.update(choices=unique_accession_ids, visible=False, value=[]), gr.update(visible=True, interactive=True),  gr.update(choices=feature_choices_custom, value=feature_choices_custom, visible=True), "Finished converting files and adding to Blazegraph!", gr.Tabs(selected=1)
 
@@ -242,7 +249,10 @@ def create_graph_button_click(
 
     progress = gr.Progress()
     progress(0, desc="Starting graph creation")
+    import time
+    start_time_cg = time.time()
     graph_output_path, _ = create_graph(config, progress)
+    print("Time taken to create graph: ", time.time()-start_time_cg)
     loaded_config_json = json.load(open(graph_output_path.replace(".bin", "_config.json")))
     loaded_config = GraphCreationConfig(**loaded_config_json)
     trainer_config.input_graph_path = graph_output_path
@@ -297,6 +307,8 @@ def update_trainer_config(model_selection, epochs, hidden_layers, learning_rate)
     trainer_config.learning_rate = float(learning_rate)
 
 def start_training():
+    import time
+    start_time_tr = time.time()
     filepath = trainer_config.training_statistics_filename
     if os.path.exists(filepath):
         json.dump({
@@ -305,12 +317,22 @@ def start_training():
             'validation_loss': [],
             'validation_accuracy': []}, open(filepath, 'w'))
     tr.run(trainer_config)
+    print("Time taken to train model: ", time.time()-start_time_tr)
     confusion_matrix_path, classification_report_df = draw_confusion_matrix(trainer_config)
     return gr.update(visible=True), gr.update(value=classification_report_df), gr.update(value=confusion_matrix_path, visible=True), gr.update(visible=True)
 
 def show_model_inference():
-    return gr.Tabs(selected=4)
+    return gr.Tabs(selected=4), gr.update(visible=True)
 
+
+# Function to load images
+def load_images():
+    image_paths = glob.glob("/mydata/GAF/VariantKG/codebase/subgraph_*.png")
+    images = [Image.open(path) for path in image_paths]
+    return images
+
+def show_model_interpretation():
+    return gr.Tabs(selected=5)
 
 def update_memory_used_plot():
     global seconds, memory_used
@@ -353,7 +375,6 @@ with gr.Blocks(js=js_func) as demo:
         </div>
         """
     )
-    
     with gr.Row() as options:
         our_data_button_2 = gr.Button("Use pre-built KG")
         custom_data_button_1 = gr.Button("Upload a new VCF")
@@ -565,19 +586,44 @@ with gr.Blocks(js=js_func) as demo:
             train_button = gr.Button("Start training", variant="primary")
             model_inference_button = gr.Button("Evaluate test set", variant="primary", visible=False)
         
-        with gr.TabItem("Model Inference", id=4, visible=False) as tab5:
+        with gr.TabItem("Model Inference", id=4,visible=False) as tab5:
             with gr.Row():
                 metrics_df = gr.Dataframe(label="Test set metric scores")
             with gr.Row():
-                # gr.HTML("""<div id='img_size' style='display:block; margin-left: auto;></div>""")
                 confusion_matrix = gr.Image(
                     label="image", 
                     visible=False, 
                     width=600, 
                     height=500,
-                    
                 )
-    
+            model_interpretation_button = gr.Button("Model Interpretation", variant="primary")
+            
+        with gr.TabItem("Model Interpretation", id=5, visible=False) as tab6:
+            hops_slider = gr.Slider(minimum=1, maximum=25, step=1, label="Number of Degree/Hops per Node")
+            subgraphs_slider = gr.Slider(minimum=1, maximum=10, step=1, label="Number of Subgraphs to Display")
+            node_id_input = gr.Textbox(label="Enter Node ID")
+            display_button = gr.Button("Display Subgraphs")
+            image_gallery = gr.Gallery(label="Subgraph Images", elem_id="subgraph_gallery")
+
+            # subgraph_output = gr.Plot(label="Subgraph Visualization")
+
+            def display_subgraphs(hops, subgraphs, node_id_input):
+                main(node_id_input, hops, subgraphs)
+                print("Displaying subgraphs!")
+                images = load_images()
+                return images
+            display_button.click(display_subgraphs, inputs=[hops_slider, subgraphs_slider, node_id_input], outputs=image_gallery)
+            
+            # # Add image gallery and update button within the same tab
+            # image_gallery = gr.Gallery(label="Subgraph Images", elem_id="subgraph_gallery")
+
+            # def update_gallery():
+            #     images = load_images()
+            #     return images
+
+            # update_button = gr.Button("Load Images")
+            # update_button.click(update_gallery, inputs=[], outputs=image_gallery)
+
     #NOTE ----- select accessionID by default
     upload_button.upload(
         fn=upload_file,
@@ -606,7 +652,6 @@ with gr.Blocks(js=js_func) as demo:
         fn=feature_generator_click,
         outputs=[feature_selector, graph_creation_group, submit_button, feature_creation_group, fetch_button, progress_status]
     )
-    
     # self_loop_checkbox.change(update_self_loop, inputs=self_loop_checkbox)
     edge_type.change(select_edge_type, inputs=edge_type)
     bidirectional_checkbox.change(update_bidirectional, inputs=bidirectional_checkbox)
@@ -672,7 +717,8 @@ with gr.Blocks(js=js_func) as demo:
     learning_rate_input.change(update_trainer_config, [model_selection, epochs_input, hidden_layers_input, learning_rate_input])
     
     train_button.click(start_training, outputs=[tab5, metrics_df, confusion_matrix, model_inference_button])
-    model_inference_button.click(show_model_inference, outputs=[tabs])
+    model_inference_button.click(show_model_inference, outputs=[tabs, tab6])
+    model_interpretation_button.click(show_model_interpretation, outputs=[tabs])
     demo.load(update_graph_plots, None, [train_loss_plot, val_loss_plot, validation_accuracy_plot], every=1)
     demo.load(update_memory_used_plot, None, [memory_usage_plot], every=1)
     demo.load(update_button_status, None, [upload_button, submit_button], every=1)
