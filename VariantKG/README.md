@@ -120,7 +120,6 @@ To run our tool, VariantKG, we recommend using Cloudlab and Visual Studio Code. 
     $ cd /mydata/GAF/VariantKG/codebase
     $ pip3 install -r requirements.txt
     $ conda install -c dglteam dgl
-    $ sudo apt-get install gcc-4.9
     $ sudo apt-get install --only-upgrade libstdc++6 -y
     $ pip3 install torch==2.2.0
     $ pip3 install torchdata==0.7.1
