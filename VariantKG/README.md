@@ -125,6 +125,7 @@ To run our tool, VariantKG, we recommend using Cloudlab and Visual Studio Code. 
     $ pip3 install torchdata==0.7.1
     $ pip3 install pymantic numpy==1.26.4 matplotlib scikit-learn pyarrow
     $ pip3 install torch-geometric
+    $ pip3 install seaborn
     $ python3 gradio_app.py
 
 Add the port, in this case, 7865, to "Forwarding Ports" in VS Code. Then, open your browser (Safari or Chrome) and type the following:
