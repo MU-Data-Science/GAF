@@ -77,7 +77,7 @@ Step 2: Download the source code.
     $ curl -LO https://github.com/UMCUGenetics/sparqling-genomics/releases/download/0.99.11/sparqling-genomics-0.99.11.tar.gz
     $ tar zxvf sparqling-genomics-0.99.11.tar.gz
 
-Step 4: Build the Sparqling-genomics tool.
+Step 3: Build the Sparqling-genomics tool.
 
     $ cd /mydata/GAF/VariantKG/codebase/sparqling-genomics-0.99.11
     $ ./configure GUILD=/usr/bin/guild
