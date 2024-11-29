@@ -1,6 +1,9 @@
 # VariantKG
 A Scalable Tool for Analyzing Genomic Variants of Humans Using Knowledge Graphs and Machine Learning
 
+![VariantKG_Instructions](https://github.com/user-attachments/assets/c1f25d6c-e0c9-4e06-b92a-36258f993bf1)
+
+
 # Table of Contents
 
 [Setting up Conda](#conda-setup)
