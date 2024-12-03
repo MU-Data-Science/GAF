@@ -116,8 +116,8 @@ In the same file change <values> for following properties.
  ```
 11. Run `run_dstat.py` and `run_gpu_stat.py` before starting AVAH's execution.
 ```
-$ python3 ${HOME}/GAF/FABRIC/scripts/run_dstat.py 8 start
-$ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 start
+$ python3 ${HOME}/GAF/FABRIC/scripts/run_dstat.py start 8
+$ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py start 8
 ```
 
 12. Run AVAH 
@@ -125,6 +125,7 @@ $ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 start
  ```
  ${HOME}/GAF/FABRIC/scripts/run_variant_analysis_at_scale.sh -i /proj/eva-public-PG0/${USER}-sampleIDs-vlarge.txt -d NONE -n 8 -b 2 -p 17 -P H -G -g
  ```
+  - Refer to AVAH-FABRIC for running AVAH pipeline. It has the latest changes. Just clone on vm0 and rest is all good. 
   - For AVAH with CPU only execution (`-G`), use `-p 7`. Otherwise, you may see `.retry` files for some sequences. 
   - There are several ways to run AVAH. Refer to original [AVAH-STAR Repo](https://github.com/MU-Data-Science/GAF/tree/main/AVAH-STAR) for more options 
 
