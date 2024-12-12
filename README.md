@@ -29,13 +29,15 @@ Principal Investigator: Dr. Praveen Rao
 
 Other Faculty: Drs. Eduardo J. Simoes and Deepthi Rao
 
-Ph.D. Students: Khawar Shehzad, Polycarp Nalela, Ajay Kumar, Shivika Prasanna
+Ph.D. Students: Khawar Shehzad, Polycarp Nalela, Ajay Kumar
 
 B.S. Students: Matt Schutz, Chase Webb
 
 # Project Alumni
 
 Dr. Manas Jyoti Das (Postdoctoral Fellow, July 2022 - August 2023)
+
+Dr. Shivika Prasanna (Ph.D, in Computer Science, July 2024)
 
 # Acknowledgments
 
