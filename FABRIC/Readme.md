@@ -72,7 +72,7 @@ In the same file change <values> for following properties.
   - Nine reference files are needed to run the GATK pipeline. To copy these files from the master (vm0) to the worker nodes it is assumed that the files are already in the mydata folder of the master. To copy the files to the workers run the following script inside of the GAF folder:  
   - Ensure following files are present in `/mydata` before running the command below:
   - Link for ref genome: [click here](https://mailmissouri-my.sharepoint.com/:u:/g/personal/raopr_umsystem_edu/EcAAl7ea7kJGiVzbMuI5XicBOq2jEXeLN38rL8NSqii5HQ?e=8njtmq)
-  - Or transfer using scp from cloudlab to fabric cluster.
+  - Or transfer using scp from cloudlab to fabric cluster. Copy all hs38 file from any vm on cloudlab to vm0 (fabric) and and then use the script mentioned in next step to copy hs38* files on all the nodes in the cluster. Roughly the command would look like this : `scp vm6:/proj/eva-public/hs38* vm0:/mydata/`
   - Copy all hs38* files to worker nodes using `copy_ref.sh`.
  ```
  hs38.dict
@@ -131,8 +131,8 @@ $ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py start 8
 
 13. Once the experiment completes,  stop `run_dstat.py` and `run_gpu_stat.py` 
 ```
-$ python3 ${HOME}/GAF/FABRIC/scripts/run_dstat.py 8 stop
-$ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py 8 stop
+$ python3 ${HOME}/GAF/FABRIC/scripts/run_dstat.py stop 8
+$ python3 ${HOME}/GAF/FABRIC/scripts/run_gpu_stat.py stop 8
 ```
 
 14. Collect the AVAH log file from the master node, and dstat and gpu_stat files from all the worker nodes.
