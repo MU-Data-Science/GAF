@@ -114,7 +114,7 @@ make sure the following files are present in `/mydata`
   - Script should start downloading fastqFiles on 8 nodes in screen sessions. Downloaded fastq files will be placed under `/mydata/fastqFiles` on vm0 till vm7. 
   - Once all downloads are complete, on each node run `hdfs dfs -put /mydata/fastqFiles/*fastq.gz /`
   - Or if you want to move downloaded fastq files from all the VMs to VM0, in a screen run this command `for i in {0..7}; do scp vm$i:/mydata/fastqFiles/* vm0:/mydata/genomes ;done`. It will copy the downladed fastq files from all the vms to vm0:/mydata/genomes/
-
+  - Another approach is to send the command to each node to move to hdfs `for i in {0..7}; do ssh vm$i "/mydata/hadoop/bin/hdfs dfs -put /mydata/fastqFiles/* /"; done` 
 
  :exclamation: copying might throw following error `Name node is in safe mode` :exclamation: <br> <br> 
 
