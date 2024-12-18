@@ -74,6 +74,14 @@ In the same file change <values> for following properties.
   - Link for ref genome: [click here](https://mailmissouri-my.sharepoint.com/:u:/g/personal/raopr_umsystem_edu/EcAAl7ea7kJGiVzbMuI5XicBOq2jEXeLN38rL8NSqii5HQ?e=8njtmq)
   - Or transfer using scp from cloudlab to fabric cluster. Copy all hs38 file from any vm on cloudlab to vm0 (fabric) and and then use the script mentioned in next step to copy hs38* files on all the nodes in the cluster. Roughly the command would look like this : `scp vm6:/proj/eva-public/hs38* vm0:/mydata/`
   - Copy all hs38* files to worker nodes using `copy_ref.sh`.
+  - Another way (probably the easiest) is to download the reference genomes zip and copy to all nodes /mydata
+ ```
+  cd /mydata
+  pip install gdown
+  gdown https://drive.google.com/file/d/1KI6-Ikn44KIC4JfvBke63Tr4e0Uy98tI/view?usp=share_link --fuzzy
+  unzip genomeRefFiles.zip
+ ```
+make sure the following files are present in `/mydata`
  ```
  hs38.dict
  hs38.fa.amb
