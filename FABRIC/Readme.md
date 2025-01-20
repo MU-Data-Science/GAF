@@ -78,7 +78,7 @@ In the same file change <values> for following properties.
  ```
   cd /mydata
   pip install gdown
-  gdown https://drive.google.com/file/d/1g-olqU2aNYtx5Bzs7MbDkNbaHOQXM5tl/view?usp=share_link --fuzzy
+  gdown https://drive.google.com/file/d/1q-eg2hQPpsnqT7wFtld7Inc83lwyhh-n/view?usp=sharing --fuzzy
   unzip genomeRefFiles.zip
   for i in {0..7}; do scp vm0:/mydata/genomeRefFiles/* vm$i:/mydata/ ;done  (this will take sometime to copy files on all nodes)
  ```
