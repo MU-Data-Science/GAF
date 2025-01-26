@@ -2,7 +2,7 @@
 
 
 # Publications
-1. Shivika Prasanna, Ajay Kumar, Deepthi Rao, Eduardo J. Simoes, and Praveen Rao - **A Scalable Tool for Analyzing Genomic Variants of Humans Using Knowledge Graphs and Machine Learning.** In Frontiers in Big Data - Data Science, 28 pages, 2025. (to appear)
+1. Shivika Prasanna, Ajay Kumar, Deepthi Rao, Eduardo J. Simoes, and Praveen Rao - **A Scalable Tool for Analyzing Genomic Variants of Humans Using Knowledge Graphs and Machine Learning.** In Frontiers in Big Data - Data Science, 19 pages, 2025. [[Online]](https://www.frontiersin.org/journals/big-data/articles/10.3389/fdata.2024.1466391/full)
 2. Manas Das, Praveen Rao, and Lisong Xu - **Impact of the Networking Infrastructure on the Performance of Variant Calling on Human Genomes in Commodity Clusters.** In 15th ACM Conference on Bioinformatics, Computational Biology, and Health Informatics (BCB 2024), 11 pages, Shenzhen, China, 2024. [[PDF]](https://drive.google.com/file/d/1eYjIpCsueB3G1cbQES80liGldtVQk58i/view?usp=sharing) [[Slides]](https://drive.google.com/file/d/1WWHWQRExBfTX_B8Qj6WTO41XFG0aa0Nc/view?usp=sharing)
 3. Khawar Shehzad, Ajay Kumar, Matthew Schutz, Chase Webb, Polycarp Nalela, Manas Das, and Praveen Rao - **A Scalable Tool for Democratizing Variant Calling on Human Genomes Using Commodity Clusters.** In 33rd ACM Conference on Information and Knowledge Management (CIKM 2024), 5 pages, Boise, 2024. (demo) [[PDF]](https://drive.google.com/file/d/1NEH6XHrivpWOhmI183HBMryElemcK3KF/view)
 4. Praveen Rao, Khawar Shehzad - **A Technique for Secure Variant Calling on Human Genome Sequences Using SmartNICs.** In 17th IEEE International Conference on Cloud Computing (CLOUD 2024), 8 pages, Shehzhen, China, 2024. [[PDF]](https://drive.google.com/file/d/1CfRMN9ErRL9XBMcKQ9UKAV8EhED7x17-/view?usp=sharing) [[Slides]](https://drive.google.com/file/d/1TZySZN3wf6pBCeLQvXc8rIwFjH4DYexM/view?usp=sharing)
@@ -31,13 +31,14 @@ Other Faculty: Drs. Eduardo J. Simoes and Deepthi Rao
 
 Ph.D. Students: Khawar Shehzad, Polycarp Nalela, Ajay Kumar
 
-B.S. Students: Matt Schutz, Chase Webb
 
 # Project Alumni
 
 Dr. Manas Jyoti Das (Postdoctoral Fellow, July 2022 - August 2023)
 
 Dr. Shivika Prasanna (Ph.D, in Computer Science, July 2024)
+
+B.S. Students: Matt Schutz (BS in Computer Science, 2024), Chase Webb (BS in Computer Science)
 
 # Acknowledgments
 
