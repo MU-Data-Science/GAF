@@ -4,7 +4,7 @@
 
 Steps given below assume you have access to FABRIC, are a part of GAF project and have your SSH keys setup
 
-1. On Jupyter Hub clone `git clone https://github.com/MU-Data-Science/GAF.git`
+1. On Jupyter Hub clone `git clone https://github.com/MU-Data-Science/GAF.git --depth 1`
 2. To create a 8 or 16 node cluster on Fabric, go to `Jupyter Hub` on FABRIC portal. From the direcotry structure pane on the left, navigate to `GAF` > `FABRIC` > `scripts`  and open `create_cluster.ipynb`
 
   ![Screenshot 2023-11-29 at 11 26 48 AM](https://github.com/MU-Data-Science/GAF/assets/22073166/e0957486-8381-4197-ba52-42e145a51b23)
