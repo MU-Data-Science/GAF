@@ -11,6 +11,7 @@ Here's how to use on new system/instance:
     sudo apt update
     sudo apt install python3.8
     sudo apt-get install -y build-essential libssl-dev libffi-dev python3-dev
+    sudo apt-get install python3.8-distutils
     pip install --upgrade pip setuptools wheel
 4- pipenv shell 
 5- pip install backports.zoneinfo
