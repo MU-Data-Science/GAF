@@ -34,6 +34,12 @@ Instructions to download for each dataset are </br>
 `downloadSomaticFiles.py` & `downloadDemoFastqs.py` present in this directory, download the somatic files and files that are needed for demo (24ish files). </br>
 For demo files, which are a small sample from our original 650GB dataset (1) , they need to be placed at the following location on each cluster at `/mydata/genomes/` </br></br> 
 
+to kill all screen sessions do : 
+```
+nodes=(vm0 vm1 vm2 vm3 vm4 vm5 vm6 vm7)
+for node in "${nodes[@]}"; do   echo "Killing screen sessions on $node";   ssh $node 'for s in $(screen -ls | grep Detached | awk "{print \$1}"); do screen -S "$s" -X quit; done'; done
+```
+
 note: </br>
 This directory needs to be manually created on master node of each cluster only. Moreover make another renamed directory inside `/mydata/genomes/`  that django will use to create renamed files. </br>
 Hence in total we need to make the following directory structure on all clusters that django/demo will be using :
