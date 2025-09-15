@@ -47,16 +47,16 @@ for file in files:
 #create folder in vm0 and copy fq1 in gss
 if not os.path.exists("/gss/fastqFiles"):
     subprocess.run('mkdir /gss/fastqFiles', shell=True, capture_output=True, text=True)
-cmd = "cp /gss/fastqDownloadScripts/fq1\ download.py ."    
+cmd = "cp /gss/fastqDownloadScripts/fq*\ download.py ."    
 subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-#copy files to nodes and make fastqFiles folder to download fastq files 
-for i in range(1,8):
-    print("copying download script on vm%s"%i)
-    cmd = "scp /gss/fastqDownloadScripts/fq%s\ download.py ssh vm%s:/gss"%(i+1,i)
-    #print(bash_command)
-    subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    print("")
+# #copy files to nodes and make fastqFiles folder to download fastq files 
+# for i in range(1,8):
+#     print("copying download script on vm%s"%i)
+#     cmd = "scp /gss/fastqDownloadScripts/fq%s\ download.py ssh vm%s:/gss"%(i+1,i)
+#     #print(bash_command)
+#     subprocess.run(cmd, shell=True, capture_output=True, text=True)
+#     print("")
         
     
 print("")
