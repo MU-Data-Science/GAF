@@ -24,6 +24,10 @@ reads, and so on. In addition, our approach was nearly 2× faster
 than a greedy approach on the tested workload.   
 
 **Keywords:** Human genomes · Variant calling · Optimized execution  
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/dcdaad73-af72-4cbb-b4e8-bd4f0a470f3d" alt="Screenshot 2025-09-18 at 14 19 06" width="600" height="600">
+</p>
+
 
 ## Instructions: 
 **Step: 1** Create `n` node cluster in [FABRIC](https://portal.fabric-testbed.net) research testbed using, `create_cluster.ipynb.html` script in JupyterLab of FABRIC account (copy-paste the `create_cluster.ipynb.html` script in FABRIC JupyterLab from `/notebooks/` directory).   
