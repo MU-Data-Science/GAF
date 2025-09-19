@@ -1,0 +1,46 @@
+name: myenv
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - _libgcc_mutex=0.1=main
+  - _openmp_mutex=5.1=1_gnu
+  - bzip2=1.0.8=h5eee18b_6
+  - ca-certificates=2024.3.11=h06a4308_0
+  - dbus=1.13.18=hb2f20db_0
+  - expat=2.6.2=h6a678d5_0
+  - fastqc=0.12.1=hdfd78af_0
+  - font-ttf-dejavu-sans-mono=2.37=hd3eb1b0_0
+  - fontconfig=2.14.1=h4c34cd2_2
+  - freetype=2.12.1=h4a9f257_0
+  - gdbm=1.18=hd4cb3f1_4
+  - glib=2.78.4=h6a678d5_0
+  - glib-tools=2.78.4=h6a678d5_0
+  - icu=73.1=h6a678d5_0
+  - ld_impl_linux-64=2.38=h1181459_1
+  - libffi=3.4.4=h6a678d5_1
+  - libgcc-ng=11.2.0=h1234567_1
+  - libglib=2.78.4=hdc74915_0
+  - libgomp=11.2.0=h1234567_1
+  - libiconv=1.16=h5eee18b_3
+  - libpng=1.6.39=h5eee18b_0
+  - libstdcxx-ng=11.2.0=h1234567_1
+  - libuuid=1.41.5=h5eee18b_0
+  - libxcb=1.15=h7f8727e_0
+  - libxml2=2.10.4=hfdd30dd_2
+  - ncurses=6.4=h6a678d5_0
+  - openjdk=11.0.13=h87a67e3_0
+  - openssl=3.0.13=h7f8727e_2
+  - pcre2=10.42=hebb0a14_1
+  - perl=5.34.0=h5eee18b_2
+  - pip=24.0=py312h06a4308_0
+  - python=3.12.3=h996f2a0_1
+  - readline=8.2=h5eee18b_0
+  - setuptools=69.5.1=py312h06a4308_0
+  - sqlite=3.45.3=h5eee18b_0
+  - tk=8.6.14=h39e8969_0
+  - tzdata=2024a=h04d1e81_0
+  - wheel=0.43.0=py312h06a4308_0
+  - xz=5.4.6=h5eee18b_1
+  - zlib=1.2.13=h5eee18b_1
+prefix: /home/ubuntu/anaconda3/envs/myenv

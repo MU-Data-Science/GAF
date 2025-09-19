@@ -1,0 +1,212 @@
+
+
+
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>JupyterHub</title>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <link rel="stylesheet" href="/hub/static/css/style.min.css?v=01598a5386176f0279952a3b9632a07e7fce9a12aa53108973c83be9ec3473e7a59354876fab64bfeb01892eb503870183707aa03f207d7a94845ca7980c3819" type="text/css"/>
+    
+    
+    <link rel="icon" href="/hub/static/favicon.ico?v=fde5757cd3892b979919d3b1faa88a410f28829feb5ba22b6cf069f2c6c98675fceef90f932e49b510e74d65c681d5846b943e7f7cc1b41867422f0481085c1f" type="image/x-icon">
+    
+    
+    <script src="/hub/static/components/requirejs/require.js?v=bd1aa102bdb0b27fbf712b32cfcd29b016c272acf3d864ee8469376eaddd032cadcf827ff17c05a8c8e20061418fe58cf79947049f5c0dff3b4f73fcc8cad8ec" type="text/javascript" charset="utf-8"></script>
+    <script src="/hub/static/components/jquery/dist/jquery.min.js?v=bf6089ed4698cb8270a8b0c8ad9508ff886a7a842278e98064d5c1790ca3a36d5d69d9f047ef196882554fc104da2c88eb5395f1ee8cf0f3f6ff8869408350fe" type="text/javascript" charset="utf-8"></script>
+    <script src="/hub/static/components/bootstrap/dist/js/bootstrap.min.js?v=a014e9acc78d10a0a7a9fbaa29deac6ef17398542d9574b77b40bf446155d210fa43384757e3837da41b025998ebfab4b9b6f094033f9c226392b800df068bce" type="text/javascript" charset="utf-8"></script>
+    
+    <script>
+      require.config({
+          
+          urlArgs: "v=20250314202831",
+          
+          baseUrl: '/hub/static/js',
+          paths: {
+            components: '../components',
+            jquery: '../components/jquery/dist/jquery.min',
+            bootstrap: '../components/bootstrap/dist/js/bootstrap.min',
+            moment: "../components/moment/moment",
+          },
+          shim: {
+            bootstrap: {
+              deps: ["jquery"],
+              exports: "bootstrap"
+            },
+          }
+      });
+    </script>
+
+    <script type="text/javascript">
+      window.jhdata = {
+        base_url: "/hub/",
+        prefix: "/",
+        
+        
+        user: "ajay.kumar@missouri.edu",
+        
+        
+        admin_access: false,
+        
+        
+        options_form: true,
+        
+        xsrf_token: "MnwxOjB8MTA6MTc0NDEzODQyNnw1Ol94c3JmfDg4Ok5UTTNNREpsTWpsbE16UXdOR1V3T1dJeE9USTRZelU1T1RobU5USTNPVEE2TVRBM1pHTTBOekl5WmpBMk5HWmtOV0V3TW1FMk1HWmxaVGt3WkRKbU5XUT18NDFjMWJjN2IwYWU0MmQzZWQyMWFkZDY4MzA5MTlmMzkyZDQyOGQ2OTE5YjQ3ODcxODkzNDcyMzk2MTc4NzVlMw",
+      }
+    </script>
+
+    
+    
+
+</head>
+
+<body>
+
+<noscript>
+  <div id='noscript'>
+    JupyterHub requires JavaScript.<br>
+    Please enable it to proceed.
+  </div>
+</noscript>
+
+
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        
+        <span id="jupyterhub-logo" class="pull-left">
+            <a href="/hub/"><img src='/hub/logo' alt='JupyterHub logo' class='jpy-logo' title='Home'/></a>
+        </span>
+        
+        
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#thenavbar" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        
+      </div>
+
+      <div class="collapse navbar-collapse" id="thenavbar">
+        
+        <ul class="nav navbar-nav">
+          
+            <li><a href="/hub/home">Home</a></li>
+            <li><a href="/hub/token">Token</a></li>
+            
+            
+          
+        </ul>
+        
+        <ul class="nav navbar-nav navbar-right">
+          
+            <li>
+              
+                <span id="login_widget">
+                  
+                    <p class="navbar-text">ajay.kumar@missouri.edu</p>
+                    <a id="logout" role="button" class="navbar-btn btn-sm btn btn-default" href="/hub/logout"> <i aria-hidden="true" class="fa fa-sign-out"></i> Logout</a>
+                  
+                </span>
+              
+            </li>
+          
+        </ul>
+      </div>
+
+      
+      
+    </div>
+  </nav>
+
+
+
+
+
+
+
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="text-center">
+      
+      <h1>
+      
+      Server not running
+      
+      </h1>
+      
+      
+      <p>
+        
+        Your server  is not running.
+          
+          Would you like to start it?
+          
+        
+      </p>
+      
+      
+      <a id="start" role="button" class="btn btn-lg btn-primary" href="/hub/spawn/ajay.kumar@missouri.edu?next=%2Fhub%2Fuser%2Fajay.kumar%40missouri.edu%2Ffiles%2Fcreate_cluster.ipynb%3F_xsrf%3DMnwxOjB8MTA6MTc0NDEzODQ0Mnw1Ol94c3JmfDEzMjpOVE0zTURKbE1qbGxNelF3TkdVd09XSXhPVEk0WXpVNU9UaG1OVEkzT1RBNk1qWmpZMk5pTmpZeE16WTNPRE00TVRFM1lqaGhPR1UxWmpJMk5qaGxZelkyWVdWbE5ETmlNRGN5WldZek5UTXhOMll3WTJZeE1HRTVNekl3TUdFeFpRPT18ODY2MGYxNDM1MzQ2OWUyNjkzZjBlY2I2YzE5NmViNWIxNGE3ZmNlYjFmMWZjODY3ZTk3YTBlMjQwNWUzMjJhYQ">
+        
+        Launch
+        
+        Server 
+      </a>
+      
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+<div class="modal fade" id="error-dialog" tabindex="-1" role="dialog" aria-labelledby="error-label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h1 class="modal-title" id="error-label">Error</h1>
+      </div>
+      <div class="modal-body">
+        
+  <div class="ajax-error">
+    The error
+  </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<script type="text/javascript">
+require(["not_running"]);
+</script>
+
+
+</body>
+
+</html>

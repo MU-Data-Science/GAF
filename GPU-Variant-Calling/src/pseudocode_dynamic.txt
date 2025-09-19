@@ -1,0 +1,12 @@
+# extract list of SRR/ERR samples
+# for loop for input.csv SRR/ERR samples
+# check empty vms function here
+# -> gives empty vms on 10second interval
+# start_time()
+# for i in samples.csv:
+#   if all machines busy; 
+#       wait 
+#   else
+#       execute i on empty vm
+# end_time()
+# duration = end_time - start_time

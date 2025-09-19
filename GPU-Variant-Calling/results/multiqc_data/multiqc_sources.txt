@@ -1,0 +1,3 @@
+Module	Section	Sample Name	Source
+FastQC	all_sections	ERR12713838_2	/home/ubuntu/GPU-Variant-Calling/vcf_time_predict/fastqc_reports/ERR12713838_2_fastqc.zip
+FastQC	all_sections	ERR12713838_1	/home/ubuntu/GPU-Variant-Calling/vcf_time_predict/fastqc_reports/ERR12713838_1_fastqc.zip
