@@ -1,3 +1,0 @@
-Sample	Top overrepresented sequence	Sum of remaining overrepresented sequences
-ERR12713838_1	0.23291089120441133	1.68161663449585
-ERR12713838_2	0.3808093071192125	1.4050349511906115
