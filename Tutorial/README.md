@@ -30,4 +30,4 @@ Here are the [tutorial slides](https://drive.google.com/file/d/1wiAZHboUWxXR7gBS
 
 ## Reference
 
-1. https://www.geneious.com/guides/introduction-to-dna-sequencing
+1. www.geneious.com/guides/introduction-to-dna-sequencing
