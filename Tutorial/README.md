@@ -11,6 +11,8 @@ Here are the [tutorial slides](https://drive.google.com/file/d/1wiAZHboUWxXR7gBS
    1. `$ ${HOME}/GAF/Tutorial/scripts/setup-GPUs-genomics.sh` 
 5. For the pathology use case
    1. `$ ${HOME}/GAF/Tutorial/scripts/setup-GPUs-WSI.sh`
+6. Also, run the below command for IPV6 issues
+   1. `$ sudo bash ${HOME}/GAF/FABRIC/scripts/nat64.sh`
 
 ## Test GPUs
 1. SSH into the VM and run the below command
