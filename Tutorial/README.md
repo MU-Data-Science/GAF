@@ -6,17 +6,17 @@ Here are the [tutorial slides](https://drive.google.com/file/d/1wiAZHboUWxXR7gBS
 ## Setup
 1. Create a slice/experiment on FABRIC by using the SliceBuilder; select Ubuntu 20.04.
 2. SSH to the slice.
-3. `$ git clone https://github.com/MU-Data-Science/GAF.git`
+3. `git clone https://github.com/MU-Data-Science/GAF.git`
 4. For the genomics use case
-   1. `$ ${HOME}/GAF/Tutorial/scripts/setup-GPUs-genomics.sh` 
+   1. `${HOME}/GAF/Tutorial/scripts/setup-GPUs-genomics.sh` 
 5. For the pathology use case
-   1. `$ ${HOME}/GAF/Tutorial/scripts/setup-GPUs-WSI.sh`
+   1. `${HOME}/GAF/Tutorial/scripts/setup-GPUs-WSI.sh`
 6. Also, run the below command for IPV6 issues
-   1. `$ sudo bash ${HOME}/GAF/FABRIC/scripts/nat64.sh`
+   1. `sudo bash ${HOME}/GAF/FABRIC/scripts/nat64.sh`
 
 ## Test GPUs
 1. SSH into the VM and run the below command
-   1. `$ sudo docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu20.04 nvidia-smi`
+   1. `sudo docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu20.04 nvidia-smi`
    
 ## Additional instructions for variant calling
 1. Download the reference genome files from [here](https://mailmissouri-my.sharepoint.com/:u:/g/personal/raopr_umsystem_edu/EcAAl7ea7kJGiVzbMuI5XicBOq2jEXeLN38rL8NSqii5HQ?e=8njtmq).
