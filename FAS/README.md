@@ -6,6 +6,7 @@
    cd GAF
    git sparse-checkout init --cone
    git sparse-checkout set FAS
+   git checkout
    cd FAS
    ```
 
