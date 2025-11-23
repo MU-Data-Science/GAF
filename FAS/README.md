@@ -2,8 +2,11 @@
 
 1. **Clone this repository**:
    ```bash
-   git clone https://github.com/your-username/fas-project.git
-   cd fas-project
+   git clone -n --depth=1 --filter=tree:0 https://github.com/MU-Data-Science/GAF.git GAF
+   cd GAF
+   git sparse-checkout init --cone
+   git sparse-checkout set FAS
+   cd FAS
    ```
 
 2. **Set up and activate a Python environment**:
@@ -21,7 +24,7 @@
 ## File Structure
 
 ```
-fas-project/
+FAS/
 ├── client.py        
 ├── server.py        
 ├── context.sec      # (Generated) 
