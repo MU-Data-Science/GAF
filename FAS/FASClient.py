@@ -15,8 +15,33 @@ from tensorflow.keras import layers, models
 
 HE_FRACTION  = 0.10
 SCRAMBLE_KEY = np.uint32(0xDEADBEEF)
+
+#  Gaussian standard deviation (sigma)
 NOISE_SCALE  = 0.05
+
 CHUNK_SIZE   = 8192   # must match server
+
+
+def _key_to_seed_u64(key: np.uint32) -> int:
+    return int(key) & 0xFFFFFFFFFFFFFFFF
+
+
+def permute_uint32(u32: np.ndarray, key: np.uint32) -> np.ndarray:
+    """Deterministic keyed permutation over uint32 words."""
+    flat = u32.reshape(-1)
+    rng = np.random.default_rng(_key_to_seed_u64(key))
+    perm = rng.permutation(flat.size)
+    return flat[perm].reshape(u32.shape)
+
+
+def unpermute_uint32(u32_scr: np.ndarray, key: np.uint32) -> np.ndarray:
+    """Invert deterministic keyed permutation (recompute perm from key and length)."""
+    flat = u32_scr.reshape(-1)
+    rng = np.random.default_rng(_key_to_seed_u64(key))
+    perm = rng.permutation(flat.size)
+    inv = np.empty_like(perm)
+    inv[perm] = np.arange(perm.size)
+    return flat[inv].reshape(u32_scr.shape)
 
 
 def build_model():
@@ -62,6 +87,7 @@ class FASClient(fl.client.Client):
         self.enc_len   = int(HE_FRACTION * self.total_len)
         self.num_chunks = (self.enc_len + CHUNK_SIZE - 1) // CHUNK_SIZE
 
+        # TenSEAL context setup
         if ts is not None:
             if os.path.exists("context.sec"):
                 with open("context.sec", "rb") as f:
@@ -81,7 +107,7 @@ class FASClient(fl.client.Client):
                     f.write(self.context.serialize(save_secret_key=False))
         else:
             self.context = None
-          
+
     def _decode_fas_parameters(self, parameters: fl.common.Parameters):
         tensors = parameters.tensors
         if len(tensors) != self.num_chunks + 1:
@@ -92,7 +118,7 @@ class FASClient(fl.client.Client):
         he_chunks_bytes = tensors[:self.num_chunks]
         rest_bytes      = tensors[self.num_chunks]
 
-
+        # Decrypt HE chunks (client has secret key; ok)
         he_chunks = []
         for c_bytes in he_chunks_bytes:
             if ts is not None:
@@ -104,11 +130,17 @@ class FASClient(fl.client.Client):
 
         he_dec = np.concatenate(he_chunks, axis=0)
 
-        rest_uint32 = np.frombuffer(rest_bytes, dtype=np.uint32)
-        rest_dec = np.bitwise_xor(rest_uint32, SCRAMBLE_KEY).view(np.float32)
+        # Unscramble DP part: keyed permutation inverse over uint32 words
+        rest_uint32_scr = np.frombuffer(rest_bytes, dtype=np.uint32)
+        if rest_uint32_scr.size > 0:
+            rest_uint32 = unpermute_uint32(rest_uint32_scr, SCRAMBLE_KEY)
+            rest_dec = rest_uint32.view(np.float32)
+        else:
+            rest_dec = np.array([], dtype=np.float32)
 
         flat = np.concatenate([he_dec, rest_dec], axis=0)
 
+        # Rebuild weights
         new_weights = []
         offset = 0
         for shape in self.param_shapes:
@@ -129,6 +161,7 @@ class FASClient(fl.client.Client):
     def fit(self, ins: fl.common.FitIns):
         parameters = ins.parameters
 
+        # Receive global model
         if parameters.tensor_type == "numpy.ndarray":
             new_weights = fl.common.parameters_to_ndarrays(parameters)
         else:
@@ -136,7 +169,10 @@ class FASClient(fl.client.Client):
 
         self.model.set_weights(new_weights)
 
+        # Local training
         self.model.fit(self.x_train, self.y_train, epochs=20, batch_size=32, verbose=0)
+
+        # Flatten updated weights
         updated_weights = self.model.get_weights()
         flat = np.concatenate([w.flatten() for w in updated_weights]).astype(np.float32)
 
@@ -144,6 +180,7 @@ class FASClient(fl.client.Client):
         he_vec  = flat[:enc_len]
         rest_vec = flat[enc_len:]
 
+        # Encrypt HE fraction in chunks
         he_chunks_bytes = []
         for j in range(self.num_chunks):
             start = j * CHUNK_SIZE
@@ -156,13 +193,17 @@ class FASClient(fl.client.Client):
                 c_bytes = chunk.tobytes()
             he_chunks_bytes.append(c_bytes)
 
+        # Apply Gaussian noise + keyed permutation scrambling to rest
         if rest_vec.size > 0:
-            noise = np.random.laplace(
+            noise = np.random.normal(
                 loc=0.0, scale=NOISE_SCALE, size=rest_vec.shape
             ).astype(np.float32)
-            rest_noisy = rest_vec + noise
+
+            rest_noisy = (rest_vec + noise).astype(np.float32)
+
+            # Scramble = keyed permutation over uint32 representation
             rest_uint32 = rest_noisy.view(np.uint32)
-            scrambled_rest = np.bitwise_xor(rest_uint32, SCRAMBLE_KEY)
+            scrambled_rest = permute_uint32(rest_uint32, SCRAMBLE_KEY)
             rest_bytes = scrambled_rest.tobytes()
         else:
             rest_bytes = b""
