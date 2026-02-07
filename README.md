@@ -3,7 +3,7 @@
 
 # Publications
 ## 2026
-- Polycarp Nalela, Deepthi Rao, and Praveen Rao - **Explainable Artificial Intelligence for Predicting Mortality Risk in Metastatic Cancer: Retrospective Cohort Study Using the MSK-MET Dataset.** In Journal of Medical Internet Research (JMIR) Cancer, 27 pages, 2026. (to appear)
+- Polycarp Nalela, Deepthi Rao, and Praveen Rao - **Explainable Artificial Intelligence for Predicting Mortality Risk in Metastatic Cancer: Retrospective Cohort Study Using the MSK-MET Dataset.** In Journal of Medical Internet Research (JMIR) Cancer, 20 pages, 2026. [[online]](https://cancer.jmir.org/2026/1/e74196/)
 - Abdulkadir Korkmaz and Praveen Rao - **Fast and Secure Selective Homomorphic Encryption for Federated Learning.** In 23rd IEEE Consumer Communications & Networking Conference (CCNC), 4 pages, Las Vegas, 2026. [[PDF]](https://drive.google.com/file/d/1y2KOweJHL3Csfmfzr4bKE3Y1RmeIUnJO/view?usp=sharing) (to appear)
 
 ## 2025
