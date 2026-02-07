@@ -7,7 +7,7 @@
 - Abdulkadir Korkmaz and Praveen Rao - **Fast and Secure Selective Homomorphic Encryption for Federated Learning.** In 23rd IEEE Consumer Communications & Networking Conference (CCNC), 4 pages, Las Vegas, 2026. [[PDF]](https://drive.google.com/file/d/1y2KOweJHL3Csfmfzr4bKE3Y1RmeIUnJO/view?usp=sharing) (to appear)
 
 ## 2025
-- Ajay Kumar, Praveen Rao, and Peter Sanders - **Optimizing the Variant Calling Pipeline Execution on Human Genomes Using GPU-Enabled Machines.** In Proc. of the 14th International Workshop on Parallel and AI-based Bioinformatics and Biomedicine (ParBio), 10 pages, Philadelphia, 2025. [[PDF]](https://drive.google.com/file/d/1VLLJXFjVAHeM0kYUXa6Frf11GQ_b-TO8/view) [[Slides]](https://drive.google.com/file/d/1pTEkgYcHSMpy70e1IH3kfFhnpXWkLpxb/view?usp=sharing) (to appear) (colocated with ACM BCB 2025)
+- Ajay Kumar, Praveen Rao, and Peter Sanders - **Optimizing the Variant Calling Pipeline Execution on Human Genomes Using GPU-Enabled Machines.** In Companion Proceedings of the 16th ACM International Conference on Bioinformatics, Computational Biology and Health Informatics (BCB Companion '25), 10 pages, Philadelphia, 2025. [[PDF]](https://drive.google.com/file/d/1VLLJXFjVAHeM0kYUXa6Frf11GQ_b-TO8/view) [[Slides]](https://drive.google.com/file/d/1pTEkgYcHSMpy70e1IH3kfFhnpXWkLpxb/view?usp=sharing) (to appear) (colocated with ACM BCB 2025)
 - Shivika Prasanna, Ajay Kumar, Deepthi Rao, Eduardo J. Simoes, and Praveen Rao - **A Scalable Tool for Analyzing Genomic Variants of Humans Using Knowledge Graphs and Machine Learning.** In Frontiers in Big Data - Data Science, 19 pages, 2025. [[Online]](https://www.frontiersin.org/journals/big-data/articles/10.3389/fdata.2024.1466391/full)
 
 ## 2024
