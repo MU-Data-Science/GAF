@@ -16,8 +16,11 @@ from tensorflow.keras import layers, models
 HE_FRACTION  = 0.10
 SCRAMBLE_KEY = np.uint32(0xDEADBEEF)
 
-#  Gaussian standard deviation (sigma)
+# Gaussian standard deviation (sigma)
 NOISE_SCALE  = 0.05
+
+# L2 clipping norm for the non-encrypted portion
+CLIP_NORM    = 1.0
 
 CHUNK_SIZE   = 8192   # must match server
 
@@ -193,8 +196,15 @@ class FASClient(fl.client.Client):
                 c_bytes = chunk.tobytes()
             he_chunks_bytes.append(c_bytes)
 
-        # Apply Gaussian noise + keyed permutation scrambling to rest
+        # Apply L2 clipping + Gaussian noise + keyed permutation scrambling to rest
         if rest_vec.size > 0:
+            rest_vec = rest_vec.astype(np.float32, copy=False)
+
+            # L2 clip the non-encrypted portion
+            l2_norm = np.linalg.norm(rest_vec)
+            if l2_norm > CLIP_NORM and l2_norm > 0.0:
+                rest_vec = rest_vec * (CLIP_NORM / l2_norm)
+
             noise = np.random.normal(
                 loc=0.0, scale=NOISE_SCALE, size=rest_vec.shape
             ).astype(np.float32)
