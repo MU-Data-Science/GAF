@@ -29,22 +29,41 @@ def _key_to_seed_u64(key: np.uint32) -> int:
     return int(key) & 0xFFFFFFFFFFFFFFFF
 
 
-def permute_uint32(u32: np.ndarray, key: np.uint32) -> np.ndarray:
-    """Deterministic keyed permutation over uint32 words."""
-    flat = u32.reshape(-1)
+def permute_bits_from_bytes(data: bytes, key: np.uint32) -> bytes:
+    """Deterministic keyed permutation over individual bits."""
+    if len(data) == 0:
+        return b""
+
+    byte_arr = np.frombuffer(data, dtype=np.uint8)
+    bits = np.unpackbits(byte_arr)
+
     rng = np.random.default_rng(_key_to_seed_u64(key))
-    perm = rng.permutation(flat.size)
-    return flat[perm].reshape(u32.shape)
+    perm = rng.permutation(bits.size)
+
+    scrambled_bits = bits[perm]
+    scrambled_bytes = np.packbits(scrambled_bits)
+
+    return scrambled_bytes.tobytes()
 
 
-def unpermute_uint32(u32_scr: np.ndarray, key: np.uint32) -> np.ndarray:
-    """Invert deterministic keyed permutation (recompute perm from key and length)."""
-    flat = u32_scr.reshape(-1)
+def unpermute_bits_to_bytes(data: bytes, key: np.uint32) -> bytes:
+    """Invert deterministic keyed permutation over individual bits."""
+    if len(data) == 0:
+        return b""
+
+    byte_arr = np.frombuffer(data, dtype=np.uint8)
+    bits = np.unpackbits(byte_arr)
+
     rng = np.random.default_rng(_key_to_seed_u64(key))
-    perm = rng.permutation(flat.size)
+    perm = rng.permutation(bits.size)
+
     inv = np.empty_like(perm)
     inv[perm] = np.arange(perm.size)
-    return flat[inv].reshape(u32_scr.shape)
+
+    restored_bits = bits[inv]
+    restored_bytes = np.packbits(restored_bits)
+
+    return restored_bytes.tobytes()
 
 
 def build_model():
@@ -121,7 +140,7 @@ class FASClient(fl.client.Client):
         he_chunks_bytes = tensors[:self.num_chunks]
         rest_bytes      = tensors[self.num_chunks]
 
-        # Decrypt HE chunks (client has secret key; ok)
+        # Decrypt HE chunks
         he_chunks = []
         for c_bytes in he_chunks_bytes:
             if ts is not None:
@@ -133,11 +152,10 @@ class FASClient(fl.client.Client):
 
         he_dec = np.concatenate(he_chunks, axis=0)
 
-        # Unscramble DP part: keyed permutation inverse over uint32 words
-        rest_uint32_scr = np.frombuffer(rest_bytes, dtype=np.uint32)
-        if rest_uint32_scr.size > 0:
-            rest_uint32 = unpermute_uint32(rest_uint32_scr, SCRAMBLE_KEY)
-            rest_dec = rest_uint32.view(np.float32)
+        # Unscramble DP part using keyed bitwise permutation inverse
+        if len(rest_bytes) > 0:
+            restored_bytes = unpermute_bits_to_bytes(rest_bytes, SCRAMBLE_KEY)
+            rest_dec = np.frombuffer(restored_bytes, dtype=np.float32)
         else:
             rest_dec = np.array([], dtype=np.float32)
 
@@ -196,7 +214,7 @@ class FASClient(fl.client.Client):
                 c_bytes = chunk.tobytes()
             he_chunks_bytes.append(c_bytes)
 
-        # Apply L2 clipping + Gaussian noise + keyed permutation scrambling to rest
+        # Apply L2 clipping + Gaussian noise + keyed bitwise permutation scrambling to rest
         if rest_vec.size > 0:
             rest_vec = rest_vec.astype(np.float32, copy=False)
 
@@ -211,10 +229,8 @@ class FASClient(fl.client.Client):
 
             rest_noisy = (rest_vec + noise).astype(np.float32)
 
-            # Scramble = keyed permutation over uint32 representation
-            rest_uint32 = rest_noisy.view(np.uint32)
-            scrambled_rest = permute_uint32(rest_uint32, SCRAMBLE_KEY)
-            rest_bytes = scrambled_rest.tobytes()
+            # Scramble = keyed permutation over individual bits
+            rest_bytes = permute_bits_from_bytes(rest_noisy.tobytes(), SCRAMBLE_KEY)
         else:
             rest_bytes = b""
 
