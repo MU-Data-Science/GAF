@@ -22,22 +22,41 @@ def _key_to_seed_u64(key: np.uint32) -> int:
     return int(key) & 0xFFFFFFFFFFFFFFFF
 
 
-def permute_uint32(u32: np.ndarray, key: np.uint32) -> np.ndarray:
-    """Deterministic keyed permutation over uint32 words."""
-    flat = u32.reshape(-1)
+def permute_bits_from_bytes(data: bytes, key: np.uint32) -> bytes:
+    """Deterministic keyed permutation over individual bits."""
+    if len(data) == 0:
+        return b""
+
+    byte_arr = np.frombuffer(data, dtype=np.uint8)
+    bits = np.unpackbits(byte_arr)
+
     rng = np.random.default_rng(_key_to_seed_u64(key))
-    perm = rng.permutation(flat.size)
-    return flat[perm].reshape(u32.shape)
+    perm = rng.permutation(bits.size)
+
+    scrambled_bits = bits[perm]
+    scrambled_bytes = np.packbits(scrambled_bits)
+
+    return scrambled_bytes.tobytes()
 
 
-def unpermute_uint32(u32_scr: np.ndarray, key: np.uint32) -> np.ndarray:
-    """Invert deterministic keyed permutation."""
-    flat = u32_scr.reshape(-1)
+def unpermute_bits_to_bytes(data: bytes, key: np.uint32) -> bytes:
+    """Invert deterministic keyed permutation over individual bits."""
+    if len(data) == 0:
+        return b""
+
+    byte_arr = np.frombuffer(data, dtype=np.uint8)
+    bits = np.unpackbits(byte_arr)
+
     rng = np.random.default_rng(_key_to_seed_u64(key))
-    perm = rng.permutation(flat.size)
+    perm = rng.permutation(bits.size)
+
     inv = np.empty_like(perm)
     inv[perm] = np.arange(perm.size)
-    return flat[inv].reshape(u32_scr.shape)
+
+    restored_bits = bits[inv]
+    restored_bytes = np.packbits(restored_bits)
+
+    return restored_bytes.tobytes()
 
 
 def build_model():
@@ -62,16 +81,15 @@ model_for_shape = build_model()
 initial_weights = model_for_shape.get_weights()
 total_len = int(sum(w.size for w in initial_weights))
 enc_len   = int(HE_FRACTION * total_len)
-num_chunks = (enc_len + CHUNK_SIZE - 1) // CHUNK_SIZE  # ceil(enc_len/CHUNK_SIZE)
+num_chunks = (enc_len + CHUNK_SIZE - 1) // CHUNK_SIZE
 
 
-# Load/create TenSEAL context (server should ideally have ONLY public context)
+# Load/create TenSEAL context
 if ts is not None:
     if os.path.exists("context.pub"):
         with open("context.pub", "rb") as f:
             context = ts.context_from(f.read())
     else:
-        # Keeping your original fallback behavior (but note: this creates secret key too)
         context = ts.context(
             ts.SCHEME_TYPE.CKKS,
             poly_modulus_degree=16384,
@@ -106,7 +124,7 @@ class FASStrategy(fl.server.strategy.FedAvg):
 
         he_sums = [None for _ in range(num_chunks)]
         rest_sum = None
-        rest_len = None  # to ensure consistent tail length
+        rest_len_bytes = None
 
         for _, fit_res in results:
             params = fit_res.parameters
@@ -120,7 +138,7 @@ class FASStrategy(fl.server.strategy.FedAvg):
             rest_bytes      = tensors[num_chunks]
             weight = fit_res.num_examples / total_examples
 
-            # --- HE chunks aggregation ---
+            # HE chunks aggregation
             for j, c_bytes in enumerate(he_chunks_bytes):
                 if ts is not None and context is not None:
                     enc_vec = ts.ckks_vector_from(context, c_bytes)
@@ -137,20 +155,17 @@ class FASStrategy(fl.server.strategy.FedAvg):
                     else:
                         he_sums[j] += weight * vals
 
-            # --- Tail (DP+scramble) aggregation ---
-            if rest_bytes:
-                rest_uint32_scr = np.frombuffer(rest_bytes, dtype=np.uint32)
-
-                if rest_len is None:
-                    rest_len = rest_uint32_scr.size
-                elif rest_uint32_scr.size != rest_len:
+            # Tail aggregation: inverse bitwise permutation -> float32 -> weighted sum
+            if len(rest_bytes) > 0:
+                if rest_len_bytes is None:
+                    rest_len_bytes = len(rest_bytes)
+                elif len(rest_bytes) != rest_len_bytes:
                     raise ValueError(
-                        f"Tail length mismatch across clients: got {rest_uint32_scr.size}, expected {rest_len}"
+                        f"Tail byte-length mismatch across clients: got {len(rest_bytes)}, expected {rest_len_bytes}"
                     )
 
-                # Unscramble via inverse permutation
-                rest_uint32 = unpermute_uint32(rest_uint32_scr, SCRAMBLE_KEY)
-                rest_vals = rest_uint32.view(np.float32)
+                restored_bytes = unpermute_bits_to_bytes(rest_bytes, SCRAMBLE_KEY)
+                rest_vals = np.frombuffer(restored_bytes, dtype=np.float32)
 
                 if rest_sum is None:
                     rest_sum = weight * rest_vals
@@ -161,7 +176,6 @@ class FASStrategy(fl.server.strategy.FedAvg):
         he_agg_tensors = []
         for j in range(num_chunks):
             if he_sums[j] is None:
-                # Should not happen, but keep safe
                 he_agg_tensors.append(b"")
                 continue
 
@@ -171,13 +185,10 @@ class FASStrategy(fl.server.strategy.FedAvg):
                 he_np = np.asarray(he_sums[j], dtype=np.float32)
                 he_agg_tensors.append(he_np.tobytes())
 
-        # Re-scramble aggregated tail with same permutation
+        # Re-scramble aggregated tail with same keyed bitwise permutation
         if rest_sum is not None:
             rest_agg = rest_sum.astype(np.float32)
-            rest_uint32_out = rest_agg.view(np.uint32)
-
-            rest_scrambled_out = permute_uint32(rest_uint32_out, SCRAMBLE_KEY)
-            rest_bytes_out = rest_scrambled_out.tobytes()
+            rest_bytes_out = permute_bits_from_bytes(rest_agg.tobytes(), SCRAMBLE_KEY)
         else:
             rest_bytes_out = b""
 
@@ -187,7 +198,7 @@ class FASStrategy(fl.server.strategy.FedAvg):
             tensor_type="encrypted",
         )
 
-        print("[Server] Aggregation complete (multi-ciphertext HE + DP tail w/ permutation scrambling).")
+        print("[Server] Aggregation complete (multi-ciphertext HE + DP tail w/ bitwise permutation scrambling).")
         return new_parameters, {}
 
 
